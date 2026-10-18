@@ -1,4 +1,5 @@
 const {app,BrowserWindow,ipcMain,dialog,globalShortcut,shell,screen,Tray,Menu,nativeImage}=require('electron');
+app.setName('Morphlet');if(process.platform==='win32')app.setAppUserModelId('org.morphlet.desktop');app.setAboutPanelOptions({applicationName:'Morphlet',applicationVersion:app.getVersion(),copyright:'Morphlet contributors · MIT license'});
 const path=require('node:path');const fs=require('node:fs/promises');const sharp=require('sharp');
 const {convert,targets}=require('./convert.cjs');const {selectedFiles}=require('./selection.cjs');
 let glass; if(process.platform==='darwin'){try{glass=require('./native/glass.node');}catch(e){console.warn('Native glass unavailable:',e.message);}}
@@ -24,7 +25,7 @@ app.whenReady().then(async()=>{
  background.keepWindow(win);
  win.setVisibleOnAllWorkspaces(true,{visibleOnFullScreen:true});win.loadFile('ui/index.html');
  win.webContents.setWindowOpenHandler(()=>({action:'deny'}));win.webContents.on('will-navigate',e=>e.preventDefault());win.on('blur',()=>{if(!busy&&!dragSession)win.hide();});
- const icon=nativeImage.createFromPath(path.join(__dirname,process.platform==='darwin'?'assets/trayTemplate.png':'assets/icon.png'));if(process.platform==='darwin')icon.setTemplateImage(true);tray=new Tray(icon.resize({width:22,height:22}));tray.setToolTip('Morphlet · running in background');
+ const icon=nativeImage.createFromPath(path.join(__dirname,process.platform==='darwin'?'assets/trayTemplate.png':process.platform==='win32'?'assets/icon.ico':'assets/icon.png')).resize({width:process.platform==='darwin'?18:24,height:process.platform==='darwin'?18:24});if(process.platform==='darwin')icon.setTemplateImage(true);tray=new Tray(icon);tray.setToolTip('Morphlet · running in background');tray.on('double-click',()=>studio.open().catch(console.error));
 
  if(glass?.dragState){const {createDragTrigger}=require('./drag-trigger.cjs');const detect=createDragTrigger();dragTimer=setInterval(()=>{try{const state=glass.dragState();const files=detect(state);if(state.down&&dragSession){const cursor=screen.getCursorScreenPoint(),bounds=win.getBounds();win.webContents.send('drag-hover',{x:cursor.x-bounds.x,y:cursor.y-bounds.y});}if(!state.down&&dragSession&&!releaseTimer){const session=dragSession;const cursor=screen.getCursorScreenPoint(),bounds=win.getBounds();releaseTimer=setTimeout(()=>{releaseTimer=undefined;if(dragSession!==session||busy||!win.isVisible())return;dragSession=0;win.show();win.focus();win.webContents.send('drag-release',{x:cursor.x-bounds.x,y:cursor.y-bounds.y});},180);} if(files&&!busy&&!opening){opening=true;show(files,'Drop on a format to convert.',true).catch(console.error).finally(()=>opening=false);}}catch(error){console.warn('Drag trigger:',error.message);}},30);dragTimer.unref();}
  const registered=globalShortcut.register('Alt+C',summon);
@@ -40,6 +41,6 @@ app.whenReady().then(async()=>{
  ipcMain.handle('reveal',(_e,file)=>{if(results.has(file))shell.showItemInFolder(file);});
  ipcMain.handle('quicklook',(_e,file)=>{if(results.has(file)){if(process.platform==='darwin')win.previewFile(file);else shell.openPath(file);}});
  if(process.argv.includes('--studio'))await studio.open();
- app.on('activate',()=>{if(win.isVisible())return;if(allowed.size){position();win.show();win.focus();}else show();});
+ app.on('activate',()=>{if(studioController?.hasWindow()){if(studioController.isVisible())studioController.open().catch(console.error);return;}if(win.isVisible())return;if(allowed.size){position();win.show();win.focus();}else show();});
 });app.on('will-quit',()=>{clearInterval(dragTimer);clearTimeout(releaseTimer);portableDrag?.stop();dropDock?.close();globalShortcut.unregisterAll();});
 }

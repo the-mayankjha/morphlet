@@ -4,18 +4,18 @@ const fs=require('node:fs/promises'),path=require('node:path'),sharp=require('sh
 const {convert}=require('./convert.cjs');const {createSelectionState}=require('./selection-state.cjs');
 function createStudio({onWheel,keepWindow=()=>{}}){
  require('electron').app.once('will-quit',()=>{pdfEditor?.close().catch(()=>{});});const appearance=require('./appearance.cjs');let glass;try{if(process.platform==='darwin')glass=require('./native/glass.node');}catch{}let material='fallback';
- let window,busy=false,outputDir,controller,pdfEditor;const selection=createSelectionState(),entries=new Map(),outputs=new Set(),history=[];
+ let window,busy=false,outputDir,controller,pdfEditor,studioMenu;const selection=createSelectionState(),entries=new Map(),outputs=new Set(),history=[];
  const snapshot=()=>({files:[...entries.values()],history,outputDir,busy,appearance:appearance.getAppearance(),material});
  async function add(files){const prepared=await selection.prepare(files);for(const entry of prepared){if(entries.size>=100)break;if(!entries.has(entry.path)){const stat=await fs.stat(entry.path);entries.set(entry.path,{...entry,size:stat.size});}}selection.commit([...entries.values()]);return snapshot();}
  async function open(files=[]){if(!window||window.isDestroyed()){
-  window=new BrowserWindow({width:1280,height:860,minWidth:1020,minHeight:720,title:'Morphlet Studio',icon:path.join(__dirname,'assets/icon.png'),backgroundColor:glass?'#00000000':'#101010',transparent:!!glass,...(process.platform==='darwin'?{titleBarStyle:'hiddenInset',trafficLightPosition:{x:18,y:23}}:{}),webPreferences:{preload:path.join(__dirname,'studio-preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true}});
-  keepWindow(window);window.loadFile('ui/studio/index.html');
+  window=new BrowserWindow({width:1280,height:860,minWidth:1020,minHeight:720,title:'Morphlet Studio',skipTaskbar:false,icon:path.join(__dirname,'assets/icon.png'),backgroundColor:glass?'#00000000':'#101010',transparent:!!glass,...(process.platform==='darwin'?{titleBarStyle:'hiddenInset',trafficLightPosition:{x:18,y:23}}:{}),webPreferences:{preload:path.join(__dirname,'studio-preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true}});
+  studioMenu=require('./studio-menu.cjs').attachStudioMenu(window);keepWindow(window);window.loadFile('ui/studio/index.html');
   const nativeMaterial=()=>{if(!window||window.isDestroyed()||!glass)return;const [width,height]=window.getContentSize();material=glass.apply(window.getNativeWindowHandle(),[{x:0,y:0,width,height,radius:14}],false,appearance.getAppearance().theme);window.webContents.send('studio:state',snapshot());};let resizeTimer;window.webContents.once('did-finish-load',nativeMaterial);window.on('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(nativeMaterial,80);});require('electron').nativeTheme.on('updated',nativeMaterial);window.on('closed',()=>{clearTimeout(resizeTimer);require('electron').nativeTheme.removeListener('updated',nativeMaterial);});window.webContents.setWindowOpenHandler(()=>({action:'deny'}));window.webContents.on('will-navigate',e=>e.preventDefault());
 
  }
  if(files.length)await add(files);window.show();window.focus();if(!window.webContents.isLoading())window.webContents.send('studio:state',snapshot());return snapshot();}
  function handle(name,fn){ipcMain.handle('studio:'+name,(event,...args)=>{if(!window||window.isDestroyed()||event.sender!==window.webContents)throw Error('Invalid Studio session');return fn(...args);});}
- handle('state',snapshot);handle('theme',theme=>appearance.setAppearance(theme));
+ handle('menu-state',state=>{if(!state||typeof state!=='object'||Array.isArray(state)||Object.keys(state).length>30||!Object.values(state).every(v=>typeof v==='boolean'))throw Error('Invalid menu state');studioMenu?.update(state);});handle('state',snapshot);handle('theme',theme=>appearance.setAppearance(theme));
  handle('pick',async()=>{if(busy)throw Error('Wait for conversion to finish');const result=await dialog.showOpenDialog(window,{properties:['openFile','multiSelections']});return result.canceled?snapshot():add(result.filePaths);});
  handle('drop',files=>{if(busy)throw Error('Wait for conversion to finish');if(!Array.isArray(files)||!files.every(f=>typeof f==='string'))throw Error('Invalid files');return add(files);});
  handle('remove',file=>{if(busy)throw Error('Wait for conversion to finish');if(file===null)entries.clear();else entries.delete(file);selection.commit([...entries.values()]);return snapshot();});
@@ -47,6 +47,6 @@ function createStudio({onWheel,keepWindow=()=>{}}){
  handle('reveal',file=>{if(outputs.has(file)||selection.allowed.has(file))shell.showItemInFolder(file);});
  handle('quicklook',file=>{if(outputs.has(file)||selection.allowed.has(file)){if(process.platform==='darwin')window.previewFile(file);else return shell.openPath(file);}});
  handle('wheel',async file=>{if(busy)throw Error('Wait for conversion to finish');if(!selection.allowed.has(file))throw Error('Select an input file');window.hide();await onWheel([file]);});
- return {open};
+ return {open,isVisible:()=>!!window&&!window.isDestroyed()&&window.isVisible(),hasWindow:()=>!!window&&!window.isDestroyed()};
 }
 module.exports={createStudio};

@@ -217,6 +217,14 @@ Converted files are saved beside the source as `name-converted.ext`, with numeri
 - CSV/TSV-to-JSON expects unique headers and matching row widths.
 - Office documents, audio/video, archive input, automatic paragraph reflow, and complete PDF-to-editable-document reconstruction are not supported. Studio supports the PDF edits described below.
 
+## Native Studio menus
+
+Studio provides **File**, **Edit**, **View**, **Window**, and **Help** menus. macOS uses the system menu bar with a Morphlet application menu; Windows and Linux use a visible native window menu bar. Commands include adding files, saving an edited PDF copy, conversion, PDF search, appearance, zoom, window controls and help. Menu availability follows the current workspace. Standard text editing uses the focused field; PDF undo/redo uses the editor history when a text field is not focused.
+
+Common shortcuts: Cmd/Ctrl+O adds files, Cmd/Ctrl+S saves an edited PDF copy, Cmd/Ctrl+Enter converts the selected file, Cmd/Ctrl+F focuses PDF search, and Cmd/Ctrl+W closes Studio while the utility keeps running.
+
+The tray/menu-bar icon remains available while Morphlet runs. Studio appears in the Dock on macOS and in the taskbar on Windows/Linux. macOS returns to accessory mode when Studio hides. Linux tray visibility depends on the desktop providing a system tray; Windows may put new icons in its notification overflow area. The packaged app is named Morphlet; launching the source through Electron may still expose the Electron executable or bundle name in operating-system UI.
+
 ## Background utility
 
 Morphlet starts quietly in the menu bar (macOS) or system tray (Windows/Linux). Closing Studio or dismissing the wheel keeps the utility running, so the shortcut and drag gesture remain available. Reopen Studio from the tray menu; choose **Quit Morphlet** to fully exit.

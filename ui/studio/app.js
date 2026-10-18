@@ -62,3 +62,15 @@ document.addEventListener('dragover',event=>{event.preventDefault();if(!running)
 new ResizeObserver(()=>paint()).observe($('stage'));safely(async()=>accept(await api.state()));
 
 $('edit-pdf').onclick=()=>{if(selected()&&!running)window.openPDFEditor(showOutput&&/\.pdf$/i.test(latest(selectedPath)?.path||'')?latest(selectedPath).path:selected().path);};window.addEventListener('pdf-edited',()=>safely(async()=>{state=await api.state();renderHistory();renderQueue();updateControls();}));
+
+// Native menus reuse the same guarded UI actions as the visible controls.
+api.onMenuAction?.(command=>{
+ const editing=!$('pdf-editor').hidden,typing=/^(INPUT|TEXTAREA)$/.test(document.activeElement?.tagName);
+ if(['undo','redo'].includes(command)&&typing){document.execCommand(command);return;}
+ const map={add:'add-top',save:editing?'pe-save':null,convert:'convert-one','convert-all':'convert-all',folder:'folder',undo:editing?'pe-undo':null,redo:editing?'pe-redo':null,find:editing?'pe-search':null,files:'nav-files',results:'nav-results','edit-pdf':'edit-pdf',wheel:'quick-wheel',light:'theme-light',dark:'theme-dark'};
+ if(['fit-page','fit-width','actual-size'].includes(command)){if(editing){$('pe-zoom').value=command==='fit-page'?'fit':command==='fit-width'?'width':'1';$('pe-zoom').dispatchEvent(new Event('change'));}return;}
+ const control=$(map[command]);if(!control||control.disabled||!control.getClientRects().length)return;if(command==='find'){control.focus();control.select();}else control.click();
+});
+
+let menuTimer;function updateNativeMenu(){const editing=!$('pdf-editor').hidden,ready=id=>{const el=$(id);return !!el&&!el.disabled&&!!el.getClientRects().length;};const values={add:ready('add-top'),save:editing&&ready('pe-save'),convert:ready('convert-one'),'convert-all':ready('convert-all'),folder:ready('folder'),undo:editing&&ready('pe-undo')||/^(INPUT|TEXTAREA)$/.test(document.activeElement?.tagName),redo:editing&&ready('pe-redo')||/^(INPUT|TEXTAREA)$/.test(document.activeElement?.tagName),find:editing,'edit-pdf':ready('edit-pdf'),wheel:ready('quick-wheel'),'fit-page':editing,'fit-width':editing,'actual-size':editing};api.updateMenu?.(values).catch(()=>{});}
+new MutationObserver(()=>{clearTimeout(menuTimer);menuTimer=setTimeout(updateNativeMenu,60);}).observe(document.body,{subtree:true,childList:true,attributes:true,attributeFilter:['hidden','disabled','class']});document.addEventListener('focusin',updateNativeMenu);updateNativeMenu();
