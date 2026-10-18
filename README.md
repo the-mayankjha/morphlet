@@ -115,7 +115,7 @@ Studio and the quick wheel maintain separate selections. Results and queue setti
 
 ## PDF editing in Studio
 
-Add a PDF, select it, and click **Edit PDF** beside the workspace title. The editor stays inside Studio, sharing its header and file sidebar. Scroll continuously through the PDF or use the scrollable page list to jump to a page. Nearby page previews load on demand; the current page exposes its editing tools and properties. Click **Done editing** to return to conversion.
+Add a PDF, select it, and click **Edit PDF** beside the workspace title. The editor stays inside Studio, sharing its header and file sidebar. Scroll continuously through the PDF or use the scrollable page list to jump to a page. Nearby page previews load on demand; the current page exposes its editing tools and properties. The editing workspace fills the window beneath the header without panel gutters or a separate bottom footer. Zoom offers **Fit page**, **Fit width**, and fixed percentages. Click **Done editing** to return to conversion.
 
 ### Edit existing text
 
