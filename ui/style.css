@@ -56,3 +56,39 @@ header{width:270px}#theme{display:grid;place-items:center;width:22px;height:22px
 [data-theme=light] #center{background:linear-gradient(145deg,#ffffff30,#ffffff10);border-color:#ffffff8c}
 [data-theme=light][data-material] #result,[data-theme=light][data-material] #editor{background:linear-gradient(145deg,#ffffffe0,#ffffffbd);color:#141414;border-color:#ffffffb3}
 [data-theme=light] #close,[data-theme=light] #sound,[data-theme=light] #theme,[data-theme=light] .brand,[data-theme=light] #message{color:#111}
+
+/* Balanced frost: one quiet surface, with enough diffusion to separate Finder text. */
+:root[data-theme=dark] { --morph-surface:rgba(35,38,44,.76); --morph-edge:rgba(255,255,255,.2); --morph-ink:#f5f6f8; --morph-muted:#d0d3da; --morph-center:rgba(62,65,73,.62); }
+:root[data-theme=light] { --morph-surface:rgba(237,240,245,.82); --morph-edge:rgba(255,255,255,.65); --morph-ink:#20232b; --morph-muted:#505660; --morph-center:rgba(255,255,255,.58); }
+:root[data-theme] header,
+:root[data-theme] #message,
+:root[data-theme] #pick,
+:root[data-theme] #studio,
+:root[data-theme] #edit,
+:root[data-theme] #result,
+:root[data-theme] #editor {
+  color:var(--morph-ink);
+  background:var(--morph-surface);
+  border:1px solid var(--morph-edge);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.12),0 6px 20px rgba(0,0,0,.12);
+}
+:root[data-theme] #wheel:before {
+  background:var(--morph-surface);
+  border:1px solid var(--morph-edge);
+  box-shadow:inset 0 1px 1px rgba(255,255,255,.2),0 8px 24px rgba(0,0,0,.12);
+}
+:root[data-theme] .ring { fill:transparent;stroke:var(--morph-edge);stroke-width:1; }
+:root[data-theme] .sector { fill:rgba(255,255,255,.015);stroke:var(--morph-edge);stroke-width:.7; }
+:root[data-theme] .sector:hover,
+:root[data-theme] .sector:focus,
+:root[data-theme] .sector.drag-hover { fill:rgba(255,255,255,.17);stroke:var(--morph-edge);filter:none; }
+:root[data-theme] .label { fill:var(--morph-ink);font-size:14px;font-weight:600;stroke:none;filter:none;letter-spacing:.3px; }
+:root[data-theme] #center { background:var(--morph-center);border:1px solid var(--morph-edge);box-shadow:inset 0 1px 0 rgba(255,255,255,.15);backdrop-filter:none; }
+:root[data-theme] #file-icon { font-size:19px;text-shadow:none;color:var(--morph-ink); }
+:root[data-theme] #filename { color:var(--morph-ink);text-shadow:none; }
+:root[data-theme] #file-count { color:var(--morph-muted); }
+:root[data-theme] .brand,
+:root[data-theme] #close,
+:root[data-theme] #theme,
+:root[data-theme] #sound { color:var(--morph-ink); }
+:root[data-theme] #message { color:var(--morph-muted);font-size:10px; }
