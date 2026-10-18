@@ -34,3 +34,5 @@ header{background:transparent;padding-right:25px;border-bottom:0}.wordmark{font-
 #pe-position{border-top:1px solid #8883;margin:14px 0;padding-top:12px}#pe-position summary{font-size:11px;cursor:pointer}#pe-text-label{font-size:10px}#pe-comments button{line-height:1.6}#pe-source-text button{box-shadow:none}
 
 #pe-paper[data-tool=select] .pe-source-run{border-color:transparent;cursor:text;background:transparent}#pe-paper[data-tool=select] .pe-source-run:hover{border-color:#7779;background:#8882}#pe-paper[data-tool=edit] .pe-source-run{cursor:text}#pe-paper[data-tool=edit]{cursor:text}
+
+.pe-source-image{position:absolute;padding:0;border:1px dashed transparent;background:transparent!important;pointer-events:auto;cursor:pointer;border-radius:2px}#pe-source-text .pe-source-image:hover{border-color:#555;background:#8882!important}#pe-image-actions p{font-size:11px;opacity:.7}#pe-image-actions button{width:100%;margin:5px 0}#pe-image-actions[hidden]{display:none}
