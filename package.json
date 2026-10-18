@@ -1,0 +1,60 @@
+{
+  "name": "morphlet",
+  "version": "0.1.0",
+  "description": "Local-first desktop file conversion with a radial drop menu",
+  "license": "MIT",
+  "author": "Morphlet contributors",
+  "main": "main.cjs",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test test/*.test.cjs",
+    "dist": "electron-builder",
+    "pack": "electron-builder --dir"
+  },
+  "dependencies": {
+    "sharp": "^0.34.0",
+    "pdfkit": "^0.17.0",
+    "pdf-parse": "^2.4.0",
+    "marked": "^16.0.0",
+    "html-to-text": "^9.0.5"
+  },
+  "devDependencies": {
+    "electron": "^43.0.0",
+    "electron-builder": "^26.0.0"
+  },
+  "build": {
+    "appId": "org.morphlet.desktop",
+    "productName": "Morphlet",
+    "files": [
+      "*.cjs",
+      "ui/**/*",
+      "LICENSE"
+    ],
+    "asarUnpack": [
+      "node_modules/sharp/**/*",
+      "node_modules/@img/**/*"
+    ],
+    "mac": {
+      "target": [
+        "dmg",
+        "zip"
+      ],
+      "category": "public.app-category.utilities",
+      "extendInfo": {
+        "NSAppleEventsUsageDescription": "Morphlet reads the files you select in Finder when you press Option+C."
+      }
+    },
+    "win": {
+      "target": [
+        "nsis"
+      ]
+    },
+    "linux": {
+      "target": [
+        "AppImage",
+        "deb"
+      ],
+      "category": "Utility"
+    }
+  }
+}
