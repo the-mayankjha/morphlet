@@ -341,6 +341,10 @@ Issues and pull requests are welcome. Include your OS/version, CPU architecture,
 
 Useful next steps include broader file-manager integration, conversion workers, broader cancellation, more PDF content layouts, built-in OCR distribution, and embedded multilingual PDF fonts.
 
+## Author
+
+Created by **Mayank Kumar Jha** ([the-mayankjha](https://github.com/the-mayankjha)).
+
 ## License
 
 [MIT](LICENSE). Dependencies retain their respective licenses.

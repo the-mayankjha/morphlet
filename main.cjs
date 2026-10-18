@@ -1,5 +1,5 @@
 const {app,BrowserWindow,ipcMain,dialog,globalShortcut,shell,screen,Tray,Menu,nativeImage}=require('electron');
-app.setName('Morphlet');if(process.platform==='win32')app.setAppUserModelId('org.morphlet.desktop');app.setAboutPanelOptions({applicationName:'Morphlet',applicationVersion:app.getVersion(),copyright:'Morphlet contributors · MIT license'});
+app.setName('Morphlet');if(process.platform==='win32')app.setAppUserModelId('org.morphlet.desktop');app.setAboutPanelOptions({applicationName:'Morphlet',applicationVersion:app.getVersion(),authors:['Mayank Kumar Jha'],copyright:'Morphlet contributors · MIT license'});
 const path=require('node:path');const fs=require('node:fs/promises');const sharp=require('sharp');
 const {convert,targets}=require('./convert.cjs');const {selectedFiles}=require('./selection.cjs');
 let glass; if(process.platform==='darwin'){try{glass=require('./native/glass.node');}catch(e){console.warn('Native glass unavailable:',e.message);}}

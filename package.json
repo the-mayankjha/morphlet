@@ -3,7 +3,7 @@
   "version": "1.1.0",
   "description": "Local-first desktop file conversion with a radial drop menu",
   "license": "MIT",
-  "author": "Morphlet contributors",
+  "author": "Mayank Kumar Jha",
   "main": "main.cjs",
   "scripts": {
     "start": "electron .",
@@ -69,7 +69,7 @@
         "deb"
       ],
       "category": "Utility",
-      "maintainer": "Morphlet contributors",
+      "maintainer": "Mayank Kumar Jha",
       "icon": "assets/icon.png"
     },
     "artifactName": "${productName}-${version}-${os}-${arch}.${ext}"
