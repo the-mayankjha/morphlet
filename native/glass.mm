@@ -13,6 +13,7 @@ static napi_value apply(napi_env env,napi_callback_info info){
  napi_get_buffer_info(env,args[0],&bytes,&length);if(length<sizeof(void*)){napi_throw_type_error(env,nullptr,"Invalid handle");return nullptr;}
  bool expand=false;if(argc>2)napi_get_value_bool(env,args[2],&expand);char theme[16]={0};if(argc>3)napi_get_value_string_utf8(env,args[3],theme,sizeof(theme),nullptr);
  NSView *root=(__bridge NSView *)*(void **)bytes;
+ if(theme[0]&&root.window)root.window.appearance=[NSAppearance appearanceNamed:strcmp(theme,"light")==0?NSAppearanceNameAqua:NSAppearanceNameDarkAqua];
  if(![NSThread isMainThread]||!root){napi_throw_error(env,nullptr,"Native material requires the main thread");return nullptr;}
  NSArray *previous=objc_getAssociatedObject(root,RegionsKey);for(NSView *view in previous)[view removeFromSuperview];
  NSMutableArray *views=[NSMutableArray array];uint32_t count=0;napi_get_array_length(env,args[1],&count);
@@ -24,6 +25,7 @@ static napi_value apply(napi_env env,napi_callback_info info){
   NSRect frame=NSMakeRect(x,root.isFlipped?y:root.bounds.size.height-y-h,w,h);
   NSView *view;
   if(glassClass){view=[[glassClass alloc]initWithFrame:frame];
+   SEL setStyle=NSSelectorFromString(@"setStyle:");if([view respondsToSelector:setStyle])((void(*)(id,SEL,NSInteger))objc_msgSend)(view,setStyle,1); // Public NSGlassEffectViewStyleClear
    SEL setRadius=NSSelectorFromString(@"setCornerRadius:");if([view respondsToSelector:setRadius])((void(*)(id,SEL,CGFloat))objc_msgSend)(view,setRadius,radius);
   }else{NSVisualEffectView *effect=[[NSVisualEffectView alloc]initWithFrame:frame];effect.material=NSVisualEffectMaterialPopover;effect.blendingMode=NSVisualEffectBlendingModeBehindWindow;effect.state=NSVisualEffectStateActive;view=effect;}
   if(theme[0])view.appearance=[NSAppearance appearanceNamed:strcmp(theme,"light")==0?NSAppearanceNameAqua:NSAppearanceNameDarkAqua];

@@ -48,3 +48,11 @@ header{width:270px}#theme{display:grid;place-items:center;width:22px;height:22px
 [data-theme=light] #theme,[data-theme=light] #sound,[data-theme=light] #close{color:#171717;background:#00000007}
 [data-theme=light] .sector{fill:#ffffff06;stroke:#00000014;stroke-width:1}[data-theme=light] .ring{stroke:#ffffff90}[data-theme=light] #center{background:#ffffff15;border-color:#ffffff90;box-shadow:inset 0 1px 2px #ffffff80}
 [data-theme=light] #preview{background:#ffffff48;border-color:#00000010}[data-theme=light] #editor input[type=number],[data-theme=light] select{background:#ffffff50;border-color:#00000018;color:#171717}[data-theme=light] #editor button,[data-theme=light] #result button{color:#171717;background:#ffffff44;border-color:#00000012}[data-theme=light] #filename,[data-theme=light] #file-count{color:#171717}
+
+/* Light chrome needs its own readable glass backing over dark desktops. */
+[data-theme=light][data-material] header,[data-theme=light][data-material] #message,[data-theme=light][data-material] #pick,[data-theme=light][data-material] #edit,[data-theme=light][data-material] #studio{background:linear-gradient(145deg,#ffffffe0,#ffffffb8);color:#141414;border-color:#ffffffe6;box-shadow:inset 0 1px 1px #fff,0 4px 16px #00000010}
+[data-theme=light][data-material] #wheel:before{background:linear-gradient(145deg,#ffffff38,#ffffff20);border:1px solid #ffffff80;box-shadow:inset 0 1px 1px #ffffff90}
+[data-theme=light] .label{fill:#101010;font-weight:600;paint-order:stroke;stroke:#ffffff33;stroke-width:.6px;filter:none}
+[data-theme=light] #center{background:linear-gradient(145deg,#ffffff30,#ffffff10);border-color:#ffffff8c}
+[data-theme=light][data-material] #result,[data-theme=light][data-material] #editor{background:linear-gradient(145deg,#ffffffe0,#ffffffbd);color:#141414;border-color:#ffffffb3}
+[data-theme=light] #close,[data-theme=light] #sound,[data-theme=light] #theme,[data-theme=light] .brand,[data-theme=light] #message{color:#111}
