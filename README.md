@@ -221,3 +221,11 @@ Useful next steps include broader file-manager integration, conversion workers, 
 ## License
 
 [MIT](LICENSE). Dependencies retain their respective licenses.
+
+## Background utility
+
+Morphlet starts quietly in the menu bar (macOS) or system tray (Windows/Linux). Closing Studio or dismissing the wheel keeps the utility running, so the shortcut and drag gesture remain available. Reopen Studio from the tray menu; choose **Quit Morphlet** to fully exit.
+
+After installing, enable **Launch at login** from the tray menu to start Morphlet quietly after signing in. This setting is opt-in. Linux uses an XDG autostart entry; the desktop session must support XDG autostart. Development runs do not register themselves at login.
+
+The monochrome application icon is included in macOS, Windows, and Linux packages. Edit `assets/icon.svg` and run `npm run icons` to regenerate the PNG, ICO, ICNS, and macOS template tray icon.

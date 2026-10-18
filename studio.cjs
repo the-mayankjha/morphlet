@@ -2,16 +2,16 @@
 const {BrowserWindow,ipcMain,dialog,shell}=require('electron');
 const fs=require('node:fs/promises'),path=require('node:path'),sharp=require('sharp');
 const {convert}=require('./convert.cjs');const {createSelectionState}=require('./selection-state.cjs');
-function createStudio({onWheel}){
+function createStudio({onWheel,keepWindow=()=>{}}){
  const appearance=require('./appearance.cjs');let glass;try{if(process.platform==='darwin')glass=require('./native/glass.node');}catch{}let material='fallback';
  let window,busy=false,outputDir;const selection=createSelectionState(),entries=new Map(),outputs=new Set(),history=[];
  const snapshot=()=>({files:[...entries.values()],history,outputDir,busy,appearance:appearance.getAppearance(),material});
  async function add(files){const prepared=await selection.prepare(files);for(const entry of prepared){if(entries.size>=100)break;if(!entries.has(entry.path)){const stat=await fs.stat(entry.path);entries.set(entry.path,{...entry,size:stat.size});}}selection.commit([...entries.values()]);return snapshot();}
  async function open(files=[]){if(!window||window.isDestroyed()){
-  window=new BrowserWindow({width:1280,height:860,minWidth:1020,minHeight:720,title:'Morphlet Studio',backgroundColor:glass?'#00000000':'#101010',transparent:!!glass,...(process.platform==='darwin'?{titleBarStyle:'hiddenInset',trafficLightPosition:{x:18,y:23}}:{}),webPreferences:{preload:path.join(__dirname,'studio-preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true}});
-  window.loadFile('ui/studio/index.html');
+  window=new BrowserWindow({width:1280,height:860,minWidth:1020,minHeight:720,title:'Morphlet Studio',icon:path.join(__dirname,'assets/icon.png'),backgroundColor:glass?'#00000000':'#101010',transparent:!!glass,...(process.platform==='darwin'?{titleBarStyle:'hiddenInset',trafficLightPosition:{x:18,y:23}}:{}),webPreferences:{preload:path.join(__dirname,'studio-preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true}});
+  keepWindow(window);window.loadFile('ui/studio/index.html');
   const nativeMaterial=()=>{if(!window||window.isDestroyed()||!glass)return;const [width,height]=window.getContentSize();material=glass.apply(window.getNativeWindowHandle(),[{x:0,y:0,width,height,radius:14}],false,appearance.getAppearance().theme);window.webContents.send('studio:state',snapshot());};let resizeTimer;window.webContents.once('did-finish-load',nativeMaterial);window.on('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(nativeMaterial,80);});require('electron').nativeTheme.on('updated',nativeMaterial);window.on('closed',()=>{clearTimeout(resizeTimer);require('electron').nativeTheme.removeListener('updated',nativeMaterial);});window.webContents.setWindowOpenHandler(()=>({action:'deny'}));window.webContents.on('will-navigate',e=>e.preventDefault());
-  window.on('close',event=>{if(busy){event.preventDefault();window.hide();}});
+
  }
  if(files.length)await add(files);window.show();window.focus();if(!window.webContents.isLoading())window.webContents.send('studio:state',snapshot());return snapshot();}
  function handle(name,fn){ipcMain.handle('studio:'+name,(event,...args)=>{if(!window||window.isDestroyed()||event.sender!==window.webContents)throw Error('Invalid Studio session');return fn(...args);});}

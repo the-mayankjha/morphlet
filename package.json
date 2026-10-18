@@ -1,6 +1,6 @@
 {
   "name": "morphlet",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "Local-first desktop file conversion with a radial drop menu",
   "license": "MIT",
   "author": "Morphlet contributors",
@@ -12,7 +12,8 @@
     "pack": "electron-builder --dir",
     "build:native": "node native/build.cjs",
     "postinstall": "node native/build.cjs",
-    "studio": "electron . --studio"
+    "studio": "electron . --studio",
+    "icons": "node scripts/generate-icons.cjs"
   },
   "dependencies": {
     "html-to-text": "^9.0.5",
@@ -32,7 +33,8 @@
       "*.cjs",
       "ui/**/*",
       "LICENSE",
-      "native/**/*"
+      "native/**/*",
+      "assets/**/*"
     ],
     "asarUnpack": [
       "node_modules/sharp/**/*",
@@ -46,14 +48,17 @@
       ],
       "category": "public.app-category.utilities",
       "extendInfo": {
-        "NSAppleEventsUsageDescription": "Morphlet reads the files you select in Finder when you press Option+C."
-      }
+        "NSAppleEventsUsageDescription": "Morphlet reads the files you select in Finder when you press Option+C.",
+        "LSUIElement": true
+      },
+      "icon": "assets/icon.icns"
     },
     "win": {
       "target": [
         "nsis"
       ],
-      "artifactName": "${productName}-${version}-windows-${arch}-setup.${ext}"
+      "artifactName": "${productName}-${version}-windows-${arch}-setup.${ext}",
+      "icon": "assets/icon.ico"
     },
     "linux": {
       "target": [
@@ -61,7 +66,8 @@
         "deb"
       ],
       "category": "Utility",
-      "maintainer": "Morphlet contributors"
+      "maintainer": "Morphlet contributors",
+      "icon": "assets/icon.png"
     },
     "artifactName": "${productName}-${version}-${os}-${arch}.${ext}"
   },
