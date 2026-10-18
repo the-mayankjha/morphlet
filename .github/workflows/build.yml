@@ -1,24 +1,107 @@
-name: Test and package
-on: [push, pull_request, workflow_dispatch]
+name: Build Morphlet
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: build-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ !startsWith(github.ref, 'refs/tags/') }}
+
 jobs:
   build:
+    name: ${{ matrix.name }}
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 45
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-latest, windows-latest, ubuntu-latest]
-    runs-on: ${{ matrix.os }}
+        include:
+          - name: macOS Apple Silicon
+            runner: macos-15
+            platform: mac
+            arch: arm64
+          - name: macOS Intel
+            runner: macos-15-intel
+            platform: mac
+            arch: x64
+          - name: Windows x64
+            runner: windows-latest
+            platform: win
+            arch: x64
+          - name: Linux x64
+            runner: ubuntu-24.04
+            platform: linux
+            arch: x64
+    defaults:
+      run:
+        shell: bash
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false'
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: '24'
+          architecture: ${{ matrix.arch }}
           cache: npm
-      - run: npm ci
-      - run: npm test
-      - run: npm run dist -- --publish never
-        env:
-          CSC_IDENTITY_AUTO_DISCOVERY: false
-      - uses: actions/upload-artifact@v4
+      - name: Verify version tag
+        if: startsWith(github.ref, 'refs/tags/')
+        run: |
+          node -e "const tag=process.env.GITHUB_REF_NAME; const version=require('./package.json').version; if(tag!=='v'+version)throw Error('Tag '+tag+' must match package.json version v'+version)"
+      - name: Install dependencies
+        run: npm ci
+      - name: Build required macOS native bridge
+        if: runner.os == 'macOS'
+        run: |
+          NODE_VERSION="$(node -p 'process.versions.node')"
+          HEADER_DIR="$RUNNER_TEMP/morphlet-node-headers"
+          mkdir -p "$HEADER_DIR"
+          curl --fail --location --retry 3 "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}-headers.tar.gz" -o "$RUNNER_TEMP/node-headers.tar.gz"
+          tar -xzf "$RUNNER_TEMP/node-headers.tar.gz" -C "$HEADER_DIR" --strip-components=1
+          npm_config_nodedir="$HEADER_DIR" node native/build.cjs --required
+      - name: Test
+        run: npm test
+      - name: Build installers
+        run: npm run dist -- --${{ matrix.platform }} --${{ matrix.arch }} --publish never
+      - name: Collect installers and checksums
+        run: node scripts/collect-artifacts.cjs
+      - name: Upload installers
+        uses: actions/upload-artifact@v4
         with:
-          name: Morphlet-${{ matrix.os }}
-          path: dist/*
+          name: Morphlet-${{ matrix.platform }}-${{ matrix.arch }}
+          path: release-artifacts/
+          if-no-files-found: error
+          retention-days: 14
+          compression-level: 0
+
+  release:
+    name: Draft release
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: build
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          pattern: Morphlet-*
+          path: release-artifacts
+      - name: Create draft and upload installers
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          RELEASE_TAG: ${{ github.ref_name }}
+        run: |
+          if ! gh release view "$RELEASE_TAG" >/dev/null 2>&1; then
+            gh release create "$RELEASE_TAG" --verify-tag --draft --title "Morphlet $RELEASE_TAG" --generate-notes
+          fi
+          find release-artifacts -type f -print0 | xargs -0 gh release upload "$RELEASE_TAG" --clobber

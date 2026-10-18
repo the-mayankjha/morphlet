@@ -31,5 +31,18 @@ static napi_value apply(napi_env env,napi_callback_info info){
  objc_setAssociatedObject(root,RegionsKey,views,OBJC_ASSOCIATION_RETAIN_NONATOMIC);
  napi_value result;napi_create_string_utf8(env,glassClass?"liquid":"vibrancy",NAPI_AUTO_LENGTH,&result);return result;
 }
-static napi_value init(napi_env env,napi_value exports){napi_value fn;napi_create_function(env,"apply",NAPI_AUTO_LENGTH,apply,nullptr,&fn);napi_set_named_property(env,exports,"apply",fn);return exports;}
+
+// Poll public mouse/modifier state and the file drag pasteboard; no keyboard hooks.
+static napi_value dragState(napi_env env,napi_callback_info info){
+ napi_value state;napi_create_object(env,&state);
+ auto boolean=[&](const char *key,bool value){napi_value v;napi_get_boolean(env,value,&v);napi_set_named_property(env,state,key,v);};
+ auto number=[&](const char *key,double value){napi_value v;napi_create_double(env,value,&v);napi_set_named_property(env,state,key,v);};
+ bool down=([NSEvent pressedMouseButtons]&1)!=0,option=([NSEvent modifierFlags]&NSEventModifierFlagOption)!=0;
+ NSPasteboard *board=[NSPasteboard pasteboardWithName:NSPasteboardNameDrag];NSPoint point=[NSEvent mouseLocation];
+ boolean("down",down);boolean("option",option);number("x",point.x);number("y",point.y);number("change",board.changeCount);
+ napi_value paths;napi_create_array(env,&paths);
+ if(down&&option){NSArray *urls=[board readObjectsForClasses:@[[NSURL class]] options:@{NSPasteboardURLReadingFileURLsOnlyKey:@YES}];uint32_t i=0;for(NSURL *url in urls){if(i>=100)break;if(url.isFileURL&&url.path){napi_value value;napi_create_string_utf8(env,url.path.UTF8String,NAPI_AUTO_LENGTH,&value);napi_set_element(env,paths,i++,value);}}}
+ napi_set_named_property(env,state,"files",paths);return state;
+}
+static napi_value init(napi_env env,napi_value exports){napi_value fn;napi_create_function(env,"apply",NAPI_AUTO_LENGTH,apply,nullptr,&fn);napi_set_named_property(env,exports,"apply",fn);napi_create_function(env,"dragState",NAPI_AUTO_LENGTH,dragState,nullptr,&fn);napi_set_named_property(env,exports,"dragState",fn);return exports;}
 NAPI_MODULE(NODE_GYP_MODULE_NAME,init)
