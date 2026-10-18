@@ -98,7 +98,7 @@ Editing currently supports one selected image at a time. Quality controls affect
 
 Open **Morphlet Studio** from the menu bar/system tray, click **Studio** in the quick wheel, or run `npm run studio` from source. The tray app still starts quietly by default.
 
-Studio uses a strictly monochrome interface with dark and light themes. Use the theme button in Studio or the quick wheel; the preference is shared and saved. On macOS 26+, the Studio window uses native Liquid Glass, with a portable monochrome fallback elsewhere. File previews keep their original colors.
+Studio uses a strictly monochrome interface with dark and light themes, labelled tool icons, and a plain Morphlet wordmark. The light header has a translucent white backing to keep controls legible over desktop content. Use the theme button in Studio or the quick wheel; the preference is shared and saved. On macOS 26+, the Studio window uses native Liquid Glass, with a portable monochrome fallback elsewhere. File previews keep their original colors.
 
 Studio provides a dedicated workspace with:
 
@@ -115,7 +115,7 @@ Studio and the quick wheel maintain separate selections. Results and queue setti
 
 ## PDF editing in Studio
 
-Add a PDF, select it, and click **Edit PDF** beside the workspace title. The editor opens a larger page workspace with a page list, zoom controls, editing tools and a properties panel.
+Add a PDF, select it, and click **Edit PDF** beside the workspace title. The editor stays inside Studio, sharing its header and file sidebar. Scroll continuously through the PDF or use the scrollable page list to jump to a page. Nearby page previews load on demand; the current page exposes its editing tools and properties. Click **Done editing** to return to conversion.
 
 ### Edit existing text
 
