@@ -111,7 +111,7 @@ Converted files are saved beside the source as `name-converted.ext`, with numeri
 - Images auto-orient and metadata is stripped. Transparent pixels become white for JPEG.
 - PDF-to-image export and inline PDF preview use the first page. Quick Look can inspect the full PDF on macOS.
 - Plain TXT/Markdown exports require embedded text. AI-ready bundles optionally use installed Tesseract OCR for low-text pages and preserve full page images regardless.
-- Document conversion preserves text content, not the original page layout. Markdown-to-HTML/PDF is currently text-oriented; extracted Markdown does not reconstruct headings.
+- Markdown-to-PDF renders heading sizes, bold/italic text, lists, code blocks, tables, quotes, links and standalone local images. HTML conversion remains text-oriented. PDF-to-Markdown reconstructs detected ruled tables and monospaced code; it does not guarantee the original layout or heading hierarchy.
 - PDF text export uses built-in fonts. Full multilingual font embedding is not implemented.
 - CSV/TSV-to-JSON expects unique headers and matching row widths.
 - Office documents, audio/video, archive input, and editable PDF reconstruction are not supported.
@@ -244,3 +244,9 @@ Each bundle includes full-page PNGs (retaining vector drawings), embedded bitmap
 Processing is sequential, with at most 2,000 selected pages per bundle, a 100 MB source limit, and a 1 GB export budget. For larger books, export several page ranges. Agent context and upload limits vary; start with smaller chunks and the pages needed for your question. Everything runs locally, without sending files to an AI service.
 
 During quick-wheel conversion, the wheel gives way to a compact glass progress panel. AI-ready PDF export reports completed pages and recognition stages, then shows an activity sweep while packaging. Other conversions report completed files without estimating a made-up percentage. The result preview appears when it is ready; errors return to the wheel. Motion follows the operating system's reduced-motion setting.
+
+## Markdown formatting
+
+**PDF to Markdown:** detected ruled tables become pipe tables with escaped cells. Monospaced text becomes fenced code with indentation inferred from its position. This applies to standalone `.md` and AI-ready bundle Markdown/chunks; raw text and table JSON remain available in bundles. Code fences and table headers are preserved when splitting long chunks. A table that cannot be located confidently is appended with an extraction note while its source text is retained. Scanned tables, borderless tables, proportional-font code, merged cells and complex columns may need manual correction.
+
+**Markdown to PDF:** `#` through `######` use distinct sizes, and paragraphs support bold, italics, inline code and links. Lists, task lists, fenced code, blockquotes, horizontal rules and Markdown tables receive document formatting. Long tables repeat their headers across pages. Standalone images may reference local files inside the Markdown source folder; remote images are not fetched. Built-in fonts currently limit multilingual coverage; LaTeX rendering, syntax highlighting and full HTML/CSS layout are not provided.

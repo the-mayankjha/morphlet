@@ -74,7 +74,11 @@ async function convert(file, target, options={}) {
         output=await image.toFormat(target==='jpg'?'jpeg':target).toBuffer();
       } else {
         const extracted=await parser.getText({pageJoiner:''});
-        output=extracted.pages.map(page=>(target==='md'?`## Page ${page.num}\n\n`:`--- Page ${page.num} ---\n\n`)+page.text.trim()).join('\n\n');
+        if(target==='md'){
+          const reader=await require('./pdf-markdown.cjs').createMarkdownReader(await fs.readFile(file));const pages=[];
+          try{for(const page of extracted.pages){let tables=[];try{tables=(await parser.getTable({partial:[page.num]})).pages[0]?.tables||[];}catch{}const structured=await reader.page(page.num,tables);pages.push(`## Page ${page.num}\n\n`+structured.markdown);}}finally{await reader.destroy();}
+          output=pages.join('\n\n');
+        }else output=extracted.pages.map(page=>`--- Page ${page.num} ---\n\n`+page.text.trim()).join('\n\n');
         if (!extracted.pages.some(page=>page.text.trim())) throw Error('No embedded text found. Scanned PDFs need OCR.');
       }
     } finally { await parser.destroy(); }
@@ -96,7 +100,7 @@ async function convert(file, target, options={}) {
     if (output===undefined) { const separator=target==='csv'?',':'\t'; output=rows.map(r=>r.map(v=>/["\r\n,\t]/.test(v)?'"'+v.replaceAll('"','""')+'"':v).join(separator)).join('\n'); }
   } else {
     const source=await fs.readFile(file,'utf8'); const plain=await documentText(source,type);
-    if (target==='pdf') output=await makePDF(plain,false);
+    if (target==='pdf') output=['md','markdown'].includes(type)?await require('./markdown-pdf.cjs').markdownPDF(source,{sourceDir:path.dirname(file)}):await makePDF(plain,false);
     else if (target==='html') { const {marked}=await import('marked'); output='<!doctype html><meta charset="utf-8"><title>Converted document</title><body>' + (['md','markdown'].includes(type) ? await safeMarkdown(marked.parse(source)) : '<pre>'+escapeHTML(plain)+'</pre>')+'</body>'; }
     else output=target==='md' && ['md','markdown'].includes(type) ? source : plain;
   }

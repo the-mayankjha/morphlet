@@ -10,12 +10,12 @@ async function previewBundle(file){const handle=await fs.open(file);try{const he
 async function exportPDF(file,options={}){
  const width=Number(options.pdfWidth??1600);if(![1200,1600,2400].includes(width))throw Error('PDF detail must be 1200, 1600, or 2400 pixels');
  const ocr=options.ocr??'auto';if(!['auto','off'].includes(ocr))throw Error('Invalid OCR mode');const language=options.ocrLanguage||'eng';if(typeof language!=='string'||!/^\w+(?:\+\w+)*$/.test(language)||language.length>100)throw Error('Invalid OCR language');
- const {PDFParse}=require('pdf-parse');const source=await fs.readFile(file),parser=new PDFParse({data:source,verbosity:0});let root;const names=[],hashes={},records=[],warnings=[],chunks=[];let budget=0,current='';
+ const {PDFParse}=require('pdf-parse');const source=await fs.readFile(file),parser=new PDFParse({data:source,verbosity:0});let root,markdownReader;const names=[],hashes={},records=[],warnings=[],chunks=[];let budget=0,current='';
  const check=()=>options.signal?.throwIfAborted();
  const save=async(name,data)=>{check();const buffer=Buffer.isBuffer(data)?data:Buffer.from(data);budget+=buffer.length;if(budget>1024*1024*1024)throw Error('Export exceeds 1 GB; choose a smaller page range');await fs.mkdir(path.dirname(path.join(root,name)),{recursive:true});await fs.writeFile(path.join(root,name),buffer);names.push(name);hashes[name]=crypto.createHash('sha256').update(buffer).digest('hex');};
  const addChunk=part=>{if(current.length+part.length>24000&&current){chunks.push(current);current='';}current+=part;};
  try{
-  check();const info=await parser.getInfo();if(info.total>10000)throw Error('PDF exceeds 10,000 pages; split the source first');const pages=pageRange(options.pages,info.total);if(pages.length>2000)throw Error('Choose up to 2,000 pages per bundle');root=await fs.mkdtemp(path.join(os.tmpdir(),'morphlet-pdf-'));
+  check();const info=await parser.getInfo();markdownReader=await require('./pdf-markdown.cjs').createMarkdownReader(source);if(info.total>10000)throw Error('PDF exceeds 10,000 pages; split the source first');const pages=pageRange(options.pages,info.total);if(pages.length>2000)throw Error('Choose up to 2,000 pages per bundle');root=await fs.mkdtemp(path.join(os.tmpdir(),'morphlet-pdf-'));
   let ocrExecutable;if(ocr==='auto'){const candidates=['tesseract',...(process.platform==='darwin'?['/opt/homebrew/bin/tesseract','/usr/local/bin/tesseract']:process.platform==='win32'?[path.join(process.env.ProgramFiles||'C:\\Program Files','Tesseract-OCR','tesseract.exe')]:[])];for(const candidate of candidates){try{await execute(candidate,['--version'],{timeout:5000,windowsHide:true,signal:options.signal});ocrExecutable=candidate;break;}catch{check();}}}const hasOCR=!!ocrExecutable;
   let document=`# ${path.basename(file).replace(/[\r\n]/g,' ')}\n\nSource: ${info.total} pages. Exported pages: ${pages.join(', ')}.\n\n`;
   for(let index=0;index<pages.length;index++){
@@ -30,12 +30,13 @@ async function exportPDF(file,options={}){
    if(!text.trim())issues.push('No readable text; visual inspection is required.');
    const figures=[];try{const found=await parser.getImage({partial:[page],imageThreshold:80,imageDataUrl:false});for(const [i,embedded]of (found.pages[0]?.images||[]).entries()){if(i>=100){issues.push('Embedded image limit reached; full page image retains remaining content.');break;}const figure=`figures/page-${id}-${i+1}.png`;await save(figure,await require('sharp')(Buffer.from(embedded.data),{limitInputPixels:80_000_000}).png().toBuffer());figures.push(figure);}}catch(error){check();issues.push('Some embedded images could not be extracted; use the full page image.');}
    let tables=[];try{tables=(await parser.getTable({partial:[page]})).pages[0]?.tables||[];}catch(error){issues.push('Table detection unavailable for this page.');}
+   let structured={markdown:text,blocks:[text],codeBlocks:0,notes:[]};if(textSource==='embedded'){try{structured=await markdownReader.page(page,tables);issues.push(...structured.notes);}catch{issues.push('Rich Markdown extraction failed; plain text retained.');}}
    if(tables.length)await save(`tables/page-${id}.json`,JSON.stringify({page,tables},null,2));
    const heading=`## Page ${page}\n\n`,visual=`\n\n![Page ${page} — full layout, diagrams and equations](${image})\n`+figures.map((name,i)=>`\n![Page ${page}, embedded image ${i+1}](${name})\n`).join('')+(tables.length?`\nDetected tables: [structured JSON](tables/page-${id}.json). Verify against the page image.\n`:'')+(issues.length?'\nExtraction notes: '+issues.join(' ')+'\n':'');
-   const body=heading+(text||'[No text extracted — inspect the page image.]')+visual+'\n';document+=body;
+   const body=heading+(structured.markdown||'[No text extracted — inspect the page image.]')+visual+'\n';document+=body;
    // Chunk at a bounded character budget, retaining page citations even for long pages.
-   const content=text||'[No text extracted — inspect the page image.]';for(let at=0;at<content.length;){let end=Math.min(at+12000,content.length);if(end<content.length&&/[\uD800-\uDBFF]/.test(content[end-1]))end--;addChunk(heading+(at?'(continued)\n\n':'')+content.slice(at,end)+(at===0?visual:'')+'\n');at=end;}
-   await save(`text/page-${id}.txt`,text);records.push({page,textSource,characters:text.length,image,figures,tables:tables.length,warnings:issues});for(const issue of issues)warnings.push({page,message:issue});options.onProgress?.({page,index:index+1,completed:index+1,total:pages.length,stage:'Page complete'});
+   const parts=require('./pdf-markdown.cjs').markdownParts(structured.blocks.filter(Boolean));if(!parts.length)parts.push('[No text extracted — inspect the page image.]');for(const [partIndex,content]of parts.entries())addChunk(heading+(partIndex?'(continued)\n\n':'')+content+(partIndex===0?visual:'')+'\n');
+   await save(`text/page-${id}.txt`,text);records.push({page,textSource,characters:text.length,image,figures,tables:tables.length,codeBlocks:structured.codeBlocks,warnings:issues});for(const issue of issues)warnings.push({page,message:issue});options.onProgress?.({page,index:index+1,completed:index+1,total:pages.length,stage:'Page complete'});
   }
   if(current)chunks.push(current);await save('document.md',document);
   for(let i=0;i<chunks.length;i++)await save(`chunks/part-${String(i+1).padStart(3,'0')}.md`,chunks[i].replace(/\]\((pages|figures|tables)\//g,'](../$1/'));
@@ -45,6 +46,6 @@ async function exportPDF(file,options={}){
   options.onProgress?.({index:pages.length,completed:pages.length,total:pages.length,stage:'Packaging bundle'});
   for(let i=0;i<10000;i++){check();const candidate=path.join(folder,`${base}-ai-ready${i?'-'+i:''}.zip`);try{await zipDirectory(root,['README.md',...names.filter(n=>n!=='README.md')],candidate,options.signal);return candidate;}catch(error){if(error.code==='EEXIST')continue;await fs.rm(candidate,{force:true});throw error;}}
   throw Error('Too many bundles with this name');
- }finally{try{await parser.destroy();}finally{if(root)await fs.rm(root,{recursive:true,force:true,maxRetries:5,retryDelay:100});}}
+ }finally{try{try{await markdownReader?.destroy();}finally{await parser.destroy();}}finally{if(root)await fs.rm(root,{recursive:true,force:true,maxRetries:5,retryDelay:100});}}
 }
 module.exports={exportPDF,pageRange,previewBundle,crc32};
