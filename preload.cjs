@@ -3,6 +3,7 @@ const {contextBridge,ipcRenderer,webUtils}=require('electron');
 let droppedPaths=[];
 document.addEventListener('drop',event=>{droppedPaths=Array.from(event.dataTransfer?.files||[],file=>webUtils.getPathForFile(file)).filter(Boolean);},true);
 contextBridge.exposeInMainWorld('desktop',{
+ onConversionProgress:callback=>ipcRenderer.on('conversion-progress',(_event,value)=>callback(value)),
  onSelection:callback=>ipcRenderer.on('selection',(_event,value)=>callback(value)),
  onDragHover:callback=>ipcRenderer.on('drag-hover',(_event,value)=>callback(value)),
  onDragRelease:callback=>ipcRenderer.on('drag-release',(_event,value)=>callback(value)),
