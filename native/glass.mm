@@ -7,10 +7,11 @@
 static const void *RegionsKey = &RegionsKey;
 static double number(napi_env env,napi_value obj,const char *key){napi_value v;double d=0;napi_get_named_property(env,obj,key,&v);napi_get_value_double(env,v,&d);return d;}
 static napi_value apply(napi_env env,napi_callback_info info){
- size_t argc=2;napi_value args[2];napi_get_cb_info(env,info,&argc,args,nullptr,nullptr);
+ size_t argc=3;napi_value args[3];napi_get_cb_info(env,info,&argc,args,nullptr,nullptr);
  void *bytes=nullptr;size_t length=0;bool buffer=false;
- if(argc!=2||napi_is_buffer(env,args[0],&buffer)!=napi_ok||!buffer){napi_throw_type_error(env,nullptr,"Expected a native window handle");return nullptr;}
+ if(argc<2||napi_is_buffer(env,args[0],&buffer)!=napi_ok||!buffer){napi_throw_type_error(env,nullptr,"Expected a native window handle");return nullptr;}
  napi_get_buffer_info(env,args[0],&bytes,&length);if(length<sizeof(void*)){napi_throw_type_error(env,nullptr,"Invalid handle");return nullptr;}
+ bool expand=false;if(argc>2)napi_get_value_bool(env,args[2],&expand);
  NSView *root=(__bridge NSView *)*(void **)bytes;
  if(![NSThread isMainThread]||!root){napi_throw_error(env,nullptr,"Native material requires the main thread");return nullptr;}
  NSArray *previous=objc_getAssociatedObject(root,RegionsKey);for(NSView *view in previous)[view removeFromSuperview];
@@ -26,7 +27,9 @@ static napi_value apply(napi_env env,napi_callback_info info){
    SEL setRadius=NSSelectorFromString(@"setCornerRadius:");if([view respondsToSelector:setRadius])((void(*)(id,SEL,CGFloat))objc_msgSend)(view,setRadius,radius);
   }else{NSVisualEffectView *effect=[[NSVisualEffectView alloc]initWithFrame:frame];effect.material=NSVisualEffectMaterialPopover;effect.blendingMode=NSVisualEffectBlendingModeBehindWindow;effect.state=NSVisualEffectStateActive;view=effect;}
   view.wantsLayer=YES;view.layer.cornerRadius=radius;view.layer.masksToBounds=YES;
+  if(expand&&radius>100){view.frame=NSMakeRect(NSMidX(frame)-1,NSMidY(frame)-1,2,2);}
   [root addSubview:view positioned:NSWindowBelow relativeTo:nil];[views addObject:view];
+  if(expand&&radius>100){[NSAnimationContext runAnimationGroup:^(NSAnimationContext *context){context.duration=.28;context.timingFunction=[CAMediaTimingFunction functionWithName:kCAMediaTimingFunctionEaseOut];[[view animator]setFrame:frame];} completionHandler:nil];}
  }
  objc_setAssociatedObject(root,RegionsKey,views,OBJC_ASSOCIATION_RETAIN_NONATOMIC);
  napi_value result;napi_create_string_utf8(env,glassClass?"liquid":"vibrancy",NAPI_AUTO_LENGTH,&result);return result;

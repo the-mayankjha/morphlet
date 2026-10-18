@@ -6,7 +6,7 @@ contextBridge.exposeInMainWorld('desktop',{
  onSelection:callback=>ipcRenderer.on('selection',(_event,value)=>callback(value)),
  onDragHover:callback=>ipcRenderer.on('drag-hover',(_event,value)=>callback(value)),
  onDragRelease:callback=>ipcRenderer.on('drag-release',(_event,value)=>callback(value)),
- material:regions=>ipcRenderer.invoke('material',regions),
+ material:(regions,expand=false)=>ipcRenderer.invoke('material',regions,expand),
  hide:()=>ipcRenderer.invoke('hide'),pick:()=>ipcRenderer.invoke('pick'),
  drop:()=>{const files=droppedPaths;droppedPaths=[];return ipcRenderer.invoke('drop',files);},
  convert:(target,options)=>ipcRenderer.invoke('convert',{target,options}),
