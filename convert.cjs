@@ -8,7 +8,7 @@ const text = ['txt','md','markdown','html','htm'];
 const ext = file => path.extname(file).slice(1).toLowerCase();
 function targets(file) {
   const type = ext(file);
-  if (images.includes(type)) return ['png','jpg','webp','avif','tiff','pdf'];
+  if (images.includes(type)) return ['png','jpg','webp','avif','tiff',...(type==='svg'?[]:['svg']),'pdf'];
   if (text.includes(type)) return ['txt','md','html','pdf'];
   if (type === 'pdf') return ['zip','png','jpg','webp','txt','md'];
   if (type === 'json') return ['json','csv','tsv','txt'];
@@ -50,19 +50,22 @@ async function convert(file, target, options={}) {
   if(type==='pdf'&&target==='zip')return require('./pdf-ai.cjs').exportPDF(file,options);
   let output;
   if (images.includes(type)) {
-    let image=sharp(file,{limitInputPixels:80_000_000}).rotate();
+    let density=72,svgScale=1;
+    if(options.width!==undefined&&options.width!==''){const width=Number(options.width);if(!Number.isInteger(width)||width<1||width>16000)throw Error('Width must be 1–16000 pixels');if(type==='svg'){const meta=await sharp(file,{limitInputPixels:80_000_000}).metadata();svgScale=Math.max(1,width/(options.crop?.width||meta.width));density=72*svgScale;if(density>100000||meta.width*meta.height*svgScale*svgScale>80_000_000)throw Error('SVG render exceeds the supported resolution. Choose a smaller width.');}}
+    let image=sharp(file,{limitInputPixels:80_000_000,...(type==='svg'?{density}:{})}).rotate().keepIccProfile();
     if (options.crop) {
       const {left,top,width,height}=options.crop;
       if (![left,top,width,height].every(Number.isInteger) || left<0 || top<0 || width<1 || height<1) throw Error('Invalid crop rectangle');
-      image=image.extract({left,top,width,height});
+      image=image.extract({left:Math.round(left*svgScale),top:Math.round(top*svgScale),width:Math.floor(width*svgScale),height:Math.floor(height*svgScale)});
     }
     if(options.flip)image=image.flip();
     if(options.flop)image=image.flop();
-    if (options.width) { const width=Number(options.width); if (!Number.isInteger(width)||width<1||width>16000) throw Error('Width must be 1–16000 pixels'); image=image.resize({width,withoutEnlargement:true}); }
-    const quality=Number(options.quality ?? 85);
+    if (options.width) { const width=Number(options.width); if (!Number.isInteger(width)||width<1||width>16000) throw Error('Width must be 1–16000 pixels'); image=image.resize({width,withoutEnlargement:type!=='svg',kernel:'lanczos3'}); }
+    const quality=Number(options.quality ?? 100);
     if (!Number.isInteger(quality)||quality<1||quality>100) throw Error('Quality must be 1–100');
-    if (target==='pdf') output=await makePDF(await image.png().toBuffer(),true);
-    else { if (target==='jpg') image=image.flatten({background:'#ffffff'}); output=await image.toFormat(target==='jpg'?'jpeg':target,{quality}).toBuffer(); }
+    if(target==='svg')output=await require('./image-svg.cjs').imageSVG(image,options);
+    else if (target==='pdf') output=await makePDF(await image.png().toBuffer(),true);
+    else { if (target==='jpg') image=image.flatten({background:'#ffffff'}); const settings=target==='jpg'?{quality,chromaSubsampling:'4:4:4',mozjpeg:true}:target==='png'?{compressionLevel:9,adaptiveFiltering:true,palette:false}:target==='webp'?{quality,lossless:quality===100,effort:6}:target==='avif'?{quality,lossless:quality===100,effort:6,chromaSubsampling:'4:4:4'}:target==='tiff'?{compression:'lzw'}:{quality};output=await image.toFormat(target==='jpg'?'jpeg':target,settings).toBuffer(); }
   } else if (type==='pdf') {
     const { PDFParse }=require('pdf-parse'); const parser=new PDFParse({data:await fs.readFile(file)});
     try {

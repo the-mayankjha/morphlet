@@ -1,0 +1,2 @@
+const {parentPort,workerData}=require('node:worker_threads');
+try{const tracer=require('imagetracerjs');const svg=tracer.imagedataToSVG({width:workerData.width,height:workerData.height,data:new Uint8ClampedArray(workerData.data)},{ltres:.25,qtres:.25,pathomit:0,numberofcolors:64,colorsampling:2,colorquantcycles:5,mincolorratio:0,roundcoords:3,strokewidth:0,viewbox:true,desc:false,blurradius:0});parentPort.postMessage({svg});}catch(error){parentPort.postMessage({error:error.message});}

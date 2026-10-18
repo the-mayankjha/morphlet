@@ -96,7 +96,7 @@ Studio and the quick wheel maintain separate selections. Results and queue setti
 
 | Input | Output |
 | --- | --- |
-| PNG, JPG/JPEG, WebP, AVIF, TIFF, GIF, SVG | PNG, JPG, WebP, AVIF, TIFF, PDF |
+| PNG, JPG/JPEG, WebP, AVIF, TIFF, GIF, SVG | PNG, JPG, WebP, AVIF, TIFF, PDF; raster inputs can also export SVG |
 | TXT, Markdown (`.md`, `.markdown`), HTML | TXT, Markdown, HTML, PDF |
 | PDF | AI-ready ZIP with all selected pages and diagrams; PNG/JPG/WebP of **page 1**; page-labelled TXT/Markdown |
 | JSON | Pretty JSON, TXT; CSV/TSV for arrays of objects |
@@ -256,3 +256,14 @@ During quick-wheel conversion, the wheel gives way to a compact glass progress p
 PDF Markdown exports infer title and section levels from document-wide font-size samples, font weight, spacing and numbered section depth. The same level is used across pages, with up to six Markdown heading levels. Repeated headers and page-number footers are filtered from structured Markdown; AI-bundle raw text still preserves the original extraction. Physical page references use comments such as `<!-- PDF page: 12 -->`, so they do not create fake sections in a Markdown outline. Wrapped heading lines are joined when their style and spacing agree. AI-bundle manifests include detected headings for each page.
 
 These are layout-based inferences, not author-supplied semantic tags. Scanned pages, visually ambiguous headings and unusual layouts may still need correction. The hierarchy model samples up to 12 pages across the document; the exported page images remain the visual reference.
+
+## SVG and image quality
+
+SVG inputs convert to PNG/JPEG/WebP/AVIF/TIFF/PDF. In Studio or Crop & edit, set the output width to render SVG directly at the requested resolution, rather than enlarging its default bitmap render. Transparency is retained by compatible formats; JPEG uses a white background. The 80-megapixel decode/render limit remains in place.
+
+For PNG and other raster inputs, choose **SVG image** in Studio:
+
+- **Lossless embedded image** is the default, including in the wheel. The SVG contains an embedded PNG and retains the processed image's pixel detail and transparency. This is an SVG container, not editable vector paths; enlarging it cannot recover missing detail.
+- **Trace editable paths** produces actual vector paths for logos and illustrations using a 64-color palette. It runs in a background worker, supports cancellation in Studio, and has a 1-megapixel input limit after edits. Crop or resize larger images explicitly. Tracing is approximate and may change colors, transparency or fine details, especially in photographs.
+
+Image quality now defaults to **100** in both Studio and the quick editor. PNG avoids palette quantization; TIFF uses lossless LZW; WebP and AVIF use lossless encoder modes at quality 100. JPEG uses quality 100 and 4:4:4 chroma by default but remains a lossy format. Lowering quality enables smaller lossy WebP/AVIF output. ICC profiles are retained where supported. Raster images retain their resolution unless resized and are not automatically enlarged. Format limitations, color-space conversion and source bit depth still affect fidelity; no conversion can create detail absent from the source.

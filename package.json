@@ -1,6 +1,6 @@
 {
   "name": "morphlet",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "Local-first desktop file conversion with a radial drop menu",
   "license": "MIT",
   "author": "Morphlet contributors",
@@ -17,6 +17,7 @@
   },
   "dependencies": {
     "html-to-text": "^9.0.5",
+    "imagetracerjs": "1.2.6",
     "marked": "^16.0.0",
     "pdf-parse": "^2.4.0",
     "pdfjs-dist": "5.4.296",
