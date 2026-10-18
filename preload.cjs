@@ -1,6 +1,7 @@
 const {contextBridge,ipcRenderer,webUtils}=require('electron');
 contextBridge.exposeInMainWorld('desktop',{
  onSelection:callback=>ipcRenderer.on('selection',(_event,value)=>callback(value)),
+ onDragHover:callback=>ipcRenderer.on('drag-hover',(_event,value)=>callback(value)),
  onDragRelease:callback=>ipcRenderer.on('drag-release',(_event,value)=>callback(value)),
  material:regions=>ipcRenderer.invoke('material',regions),
  hide:()=>ipcRenderer.invoke('hide'),pick:()=>ipcRenderer.invoke('pick'),

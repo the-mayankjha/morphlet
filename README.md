@@ -57,6 +57,10 @@ Start dragging a file, hold **Option**, and drop it onto a format wedge. The whe
 
 Use the menu bar/system tray icon → **Choose files…**. Windows and Linux currently use this workflow: automatic Explorer/Linux file-manager selection and drag+Alt activation are not implemented. **Alt+C** opens the popup with guidance and a file-picker fallback on these systems. Shortcut registration can depend on the desktop or conflict with another app.
 
+The wheel animates open and highlights the format under your pointer. Arrow keys move between formats; Enter or Space selects one. Quiet local sound effects signal opening, hovering, selection, and results. The note button in the header mutes them and remembers your preference. Reduced-motion settings disable decorative animation.
+
+If macOS does not deliver a drag/drop event, Morphlet leaves the wheel open for an explicit click; mouse release alone does not convert a potentially cancelled drag.
+
 Press **Escape** or click outside to dismiss the popup. Quit Morphlet through its tray/menu bar menu.
 
 ### Crop and edit an image
