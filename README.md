@@ -100,6 +100,8 @@ Open **Morphlet Studio** from the menu bar/system tray, click **Studio** in the 
 
 Studio uses a strictly monochrome interface with dark and light themes, labelled tool icons, and a plain Morphlet wordmark. The light header has a translucent white backing to keep controls legible over desktop content. Use the theme button in Studio or the quick wheel; the preference is shared and saved. On macOS 26+, the Studio window uses native Liquid Glass, with a portable monochrome fallback elsewhere. File previews keep their original colors.
 
+Use the sidebar button beside the Morphlet wordmark to collapse the file sidebar into an icon rail. The preference is remembered across launches and shared with the PDF editor. Expanded, the sidebar includes **Developed by Mayank Jha**. Its surface uses a dedicated native glass region on supported macOS versions and a monochrome blur fallback elsewhere.
+
 Studio provides a dedicated workspace with:
 
 - A queue of up to 100 files, with individual output formats and image settings.
