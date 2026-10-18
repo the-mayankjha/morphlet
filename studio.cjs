@@ -4,7 +4,7 @@ const fs=require('node:fs/promises'),path=require('node:path'),sharp=require('sh
 const {convert}=require('./convert.cjs');const {createSelectionState}=require('./selection-state.cjs');
 function createStudio({onWheel,keepWindow=()=>{}}){
  const appearance=require('./appearance.cjs');let glass;try{if(process.platform==='darwin')glass=require('./native/glass.node');}catch{}let material='fallback';
- let window,busy=false,outputDir;const selection=createSelectionState(),entries=new Map(),outputs=new Set(),history=[];
+ let window,busy=false,outputDir,controller;const selection=createSelectionState(),entries=new Map(),outputs=new Set(),history=[];
  const snapshot=()=>({files:[...entries.values()],history,outputDir,busy,appearance:appearance.getAppearance(),material});
  async function add(files){const prepared=await selection.prepare(files);for(const entry of prepared){if(entries.size>=100)break;if(!entries.has(entry.path)){const stat=await fs.stat(entry.path);entries.set(entry.path,{...entry,size:stat.size});}}selection.commit([...entries.values()]);return snapshot();}
  async function open(files=[]){if(!window||window.isDestroyed()){
@@ -22,8 +22,8 @@ function createStudio({onWheel,keepWindow=()=>{}}){
  handle('folder',async()=>{if(busy)throw Error('Wait for conversion to finish');const result=await dialog.showOpenDialog(window,{properties:['openDirectory','createDirectory']});if(!result.canceled)outputDir=result.filePaths[0];return snapshot();});
  handle('reset-folder',()=>{if(busy)throw Error('Wait for conversion to finish');outputDir=undefined;return snapshot();});
  handle('preview',async file=>{
-  if(!selection.allowed.has(file)&&!outputs.has(file))throw Error('Choose a file first');const stat=await fs.stat(file);if(!stat.isFile()||stat.size>100*1024*1024)throw Error('Choose a file smaller than 100 MB');
-  const extension=path.extname(file).toLowerCase();
+  if(!selection.allowed.has(file)&&!outputs.has(file))throw Error('Choose a file first');const stat=await fs.stat(file);if(!stat.isFile()||(stat.size>100*1024*1024&&!outputs.has(file)))throw Error('Choose a file smaller than 100 MB');
+  const extension=path.extname(file).toLowerCase();if(extension==='.zip'&&outputs.has(file))return {...await require('./pdf-ai.cjs').previewBundle(file),size:stat.size};
   if(/\.(png|jpe?g|webp|avif|tiff?|gif|svg)$/.test(extension)){
    const buffer=await fs.readFile(file);const meta=await sharp(buffer,{limitInputPixels:80_000_000}).metadata();const swap=meta.orientation>=5&&meta.orientation<=8;
    return {image:'data:image/png;base64,'+(await sharp(buffer,{limitInputPixels:80_000_000}).rotate().resize({width:1600,height:1200,fit:'inside',withoutEnlargement:true}).png().toBuffer()).toString('base64'),width:swap?meta.height:meta.width,height:swap?meta.width:meta.height,size:stat.size};
@@ -33,7 +33,8 @@ function createStudio({onWheel,keepWindow=()=>{}}){
   const handle=await fs.open(file);try{const buffer=Buffer.alloc(64000);const {bytesRead}=await handle.read(buffer,0,buffer.length,0);return {text:buffer.subarray(0,bytesRead).toString('utf8'),note:stat.size>64000?'First 64 KB shown':'Text preview',size:stat.size};}finally{await handle.close();}
  });
  handle('run',async jobs=>{if(busy)throw Error('Conversion already running');if(!Array.isArray(jobs)||!jobs.length||jobs.length>100)throw Error('Choose files to convert');for(const job of jobs){if(!selection.allowed.has(job.path)||!entries.get(job.path).targets.includes(job.target))throw Error('Choose a valid format for each file');}
-  busy=true;const results=[];try{for(let index=0;index<jobs.length;index++){const job=jobs[index],options=job.options||{};let result;try{const destination=await convert(job.path,job.target,{crop:options.crop,width:options.width,quality:options.quality,flip:options.flip===true,flop:options.flop===true,outputDir});outputs.add(destination);const stat=await fs.stat(destination);result={source:job.path,path:destination,name:path.basename(destination),size:stat.size,target:job.target};history.unshift(result);history.splice(100);}catch(error){result={source:job.path,error:error.message};}results.push(result);if(window&&!window.isDestroyed())window.webContents.send('studio:progress',{index:index+1,total:jobs.length,result});}return results;}finally{busy=false;}});
+  busy=true;controller=new AbortController();const results=[];try{for(let index=0;index<jobs.length;index++){if(controller.signal.aborted)break;const job=jobs[index],options=job.options||{};let result;try{const destination=await convert(job.path,job.target,{crop:options.crop,width:options.width,quality:options.quality,flip:options.flip===true,flop:options.flop===true,outputDir,pages:options.pages,pdfWidth:options.pdfWidth,ocr:options.ocr,ocrLanguage:options.ocrLanguage,signal:controller.signal,onProgress:progress=>{if(window&&!window.isDestroyed())window.webContents.send('studio:pdf-progress',progress);}});outputs.add(destination);const stat=await fs.stat(destination);result={source:job.path,path:destination,name:path.basename(destination),size:stat.size,target:job.target};history.unshift(result);history.splice(100);}catch(error){result={source:job.path,error:error.message};}results.push(result);if(window&&!window.isDestroyed())window.webContents.send('studio:progress',{index:index+1,total:jobs.length,result});}return results;}finally{busy=false;controller=undefined;}});
+ handle('cancel',()=>{controller?.abort();});
  handle('reveal',file=>{if(outputs.has(file)||selection.allowed.has(file))shell.showItemInFolder(file);});
  handle('quicklook',file=>{if(outputs.has(file)||selection.allowed.has(file)){if(process.platform==='darwin')window.previewFile(file);else return shell.openPath(file);}});
  handle('wheel',async file=>{if(busy)throw Error('Wait for conversion to finish');if(!selection.allowed.has(file))throw Error('Select an input file');window.hide();await onWheel([file]);});

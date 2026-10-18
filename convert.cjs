@@ -10,7 +10,7 @@ function targets(file) {
   const type = ext(file);
   if (images.includes(type)) return ['png','jpg','webp','avif','tiff','pdf'];
   if (text.includes(type)) return ['txt','md','html','pdf'];
-  if (type === 'pdf') return ['png','jpg','webp','txt','md'];
+  if (type === 'pdf') return ['zip','png','jpg','webp','txt','md'];
   if (type === 'json') return ['json','csv','tsv','txt'];
   if (['csv','tsv'].includes(type)) return ['csv','tsv','json','txt'];
   return [];
@@ -47,6 +47,7 @@ async function convert(file, target, options={}) {
   if (!targets(file).includes(target)) throw Error('Unsupported conversion');
   const type=ext(file); const stat=await fs.stat(file);
   if (!stat.isFile() || stat.size>100*1024*1024) throw Error('Choose a file smaller than 100 MB');
+  if(type==='pdf'&&target==='zip')return require('./pdf-ai.cjs').exportPDF(file,options);
   let output;
   if (images.includes(type)) {
     let image=sharp(file,{limitInputPixels:80_000_000}).rotate();
@@ -72,8 +73,9 @@ async function convert(file, target, options={}) {
         if(target==='jpg')image=image.flatten({background:'#ffffff'});
         output=await image.toFormat(target==='jpg'?'jpeg':target).toBuffer();
       } else {
-        output=(await parser.getText({pageJoiner:''})).text;
-        if (!output.trim()) throw Error('No embedded text found. Scanned PDFs need OCR.');
+        const extracted=await parser.getText({pageJoiner:''});
+        output=extracted.pages.map(page=>(target==='md'?`## Page ${page.num}\n\n`:`--- Page ${page.num} ---\n\n`)+page.text.trim()).join('\n\n');
+        if (!extracted.pages.some(page=>page.text.trim())) throw Error('No embedded text found. Scanned PDFs need OCR.');
       }
     } finally { await parser.destroy(); }
   } else if (['json','csv','tsv'].includes(type)) {

@@ -98,7 +98,7 @@ Studio and the quick wheel maintain separate selections. Results and queue setti
 | --- | --- |
 | PNG, JPG/JPEG, WebP, AVIF, TIFF, GIF, SVG | PNG, JPG, WebP, AVIF, TIFF, PDF |
 | TXT, Markdown (`.md`, `.markdown`), HTML | TXT, Markdown, HTML, PDF |
-| PDF | PNG, JPG, WebP of **page 1**; TXT or Markdown from embedded text |
+| PDF | AI-ready ZIP with all selected pages and diagrams; PNG/JPG/WebP of **page 1**; page-labelled TXT/Markdown |
 | JSON | Pretty JSON, TXT; CSV/TSV for arrays of objects |
 | CSV, TSV | CSV, TSV, JSON, TXT |
 
@@ -110,11 +110,11 @@ Converted files are saved beside the source as `name-converted.ext`, with numeri
 - GIF and TIFF input uses the first frame/page. Animated export is not supported.
 - Images auto-orient and metadata is stripped. Transparent pixels become white for JPEG.
 - PDF-to-image export and inline PDF preview use the first page. Quick Look can inspect the full PDF on macOS.
-- Text extraction requires embedded PDF text; scanned-PDF OCR is not implemented.
+- Plain TXT/Markdown exports require embedded text. AI-ready bundles optionally use installed Tesseract OCR for low-text pages and preserve full page images regardless.
 - Document conversion preserves text content, not the original page layout. Markdown-to-HTML/PDF is currently text-oriented; extracted Markdown does not reconstruct headings.
 - PDF text export uses built-in fonts. Full multilingual font embedding is not implemented.
 - CSV/TSV-to-JSON expects unique headers and matching row widths.
-- Office documents, audio/video, archives, and editable PDF reconstruction are not supported.
+- Office documents, audio/video, archive input, and editable PDF reconstruction are not supported.
 
 ## Platform support
 
@@ -216,7 +216,7 @@ The tag must exactly match `v` plus the package version. Installer names contain
 
 Issues and pull requests are welcome. Include your OS/version, CPU architecture, input format, intended output, and steps to reproduce. Use non-sensitive sample files. Run `npm test` before submitting changes, and describe any platform-specific behavior that needs manual testing.
 
-Useful next steps include broader file-manager integration, conversion workers, cancellation, multi-page PDF export, OCR, and embedded multilingual PDF fonts.
+Useful next steps include broader file-manager integration, conversion workers, cancellation, editable PDF reconstruction, built-in OCR distribution, and embedded multilingual PDF fonts.
 
 ## License
 
@@ -229,3 +229,16 @@ Morphlet starts quietly in the menu bar (macOS) or system tray (Windows/Linux). 
 After installing, enable **Launch at login** from the tray menu to start Morphlet quietly after signing in. This setting is opt-in. Linux uses an XDG autostart entry; the desktop session must support XDG autostart. Development runs do not register themselves at login.
 
 The monochrome application icon is included in macOS, Windows, and Linux packages. Edit `assets/icon.svg` and run `npm run icons` to regenerate the PNG, ICO, ICNS, and macOS template tray icon.
+
+## PDF books for AI agents
+
+1. Open Studio and add a PDF. **AI-ready bundle (.zip)** is selected automatically, or choose **AI PACK** in the wheel.
+2. Choose all pages or a range such as `1-20, 25`. Set visual detail to compact (1200 px), balanced (1600 px), or detailed (2400 px).
+3. Convert. Studio shows per-page progress and supports cancellation between processing steps.
+4. Unzip the result. Give your agent `document.md`, or the ordered files in `chunks/` for a long book. Also upload the relevant `pages/` images for questions about diagrams, scans, equations or layout. Markdown image links do not upload image files to an agent.
+
+Each bundle includes full-page PNGs (retaining vector drawings), embedded bitmap figures when extractable, page text, Markdown chunks of roughly 24,000 characters or less, detected tables as JSON, and `manifest.json` with per-page notes, source SHA-256, and exported file hashes. Physical PDF page numbers are preserved for citations. The original PDF is never changed or included in the ZIP. Files use exclusive names such as `book-ai-ready.zip`.
+
+**Scanned books:** automatic OCR uses a locally installed `tesseract` executable and language data (default `eng`; for multiple installed languages use e.g. `eng+hin`). Morphlet does not download OCR software or language models. It also checks common Homebrew paths on macOS and the standard Tesseract installation location on Windows. Missing OCR or failed recognition is recorded in the manifest; page images remain available for a vision-capable agent. This release does not bundle OCR, infer diagram descriptions, reconstruct mathematical notation, or guarantee complex reading order/table accuracy. Check these against the page images.
+
+Processing is sequential, with at most 2,000 selected pages per bundle, a 100 MB source limit, and a 1 GB export budget. For larger books, export several page ranges. Agent context and upload limits vary; start with smaller chunks and the pages needed for your question. Everything runs locally, without sending files to an AI service.
