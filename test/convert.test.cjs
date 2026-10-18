@@ -5,8 +5,10 @@ const os=require('node:os');
 const path=require('node:path');
 const sharp=require('sharp');
 const {convert,targets,parseDelimited}=require('../convert.cjs');
-async function temp(t){const dir=await fs.mkdtemp(path.join(os.tmpdir(),'morphlet-'));t.after(()=>fs.rm(dir,{recursive:true,force:true}));return dir;}
-test('image conversion changes actual encoding, crops, resizes, and preserves original',async t=>{const dir=await temp(t);const file=path.join(dir,'source.png');await sharp({create:{width:40,height:30,channels:4,background:'#ff000080'}}).png().toFile(file);const before=await fs.readFile(file);for(const format of ['jpg','webp','avif','tiff','png']){const output=await convert(file,format,{crop:{left:0,top:0,width:20,height:20},width:10});const meta=await sharp(output).metadata();assert.equal(meta.width,10);assert.equal(meta.height,10);assert.equal(meta.format,format==='jpg'?'jpeg':format==='avif'?'heif':format);}assert.deepEqual(await fs.readFile(file),before);});
+// Decode inspection buffers so libvips cannot retain an output-file handle on Windows.
+// Bounded removal retries also handle transient filesystem/antivirus locks.
+async function temp(t){const dir=await fs.mkdtemp(path.join(os.tmpdir(),'morphlet-'));t.after(()=>fs.rm(dir,{recursive:true,force:true,maxRetries:5,retryDelay:100}));return dir;}
+test('image conversion changes actual encoding, crops, resizes, and preserves original',async t=>{const dir=await temp(t);const file=path.join(dir,'source.png');await sharp({create:{width:40,height:30,channels:4,background:'#ff000080'}}).png().toFile(file);const before=await fs.readFile(file);for(const format of ['jpg','webp','avif','tiff','png']){const output=await convert(file,format,{crop:{left:0,top:0,width:20,height:20},width:10});const meta=await sharp(await fs.readFile(output)).metadata();assert.equal(meta.width,10);assert.equal(meta.height,10);assert.equal(meta.format,format==='jpg'?'jpeg':format==='avif'?'heif':format);}assert.deepEqual(await fs.readFile(file),before);});
 test('exclusive output paths survive concurrent conversions',async t=>{const dir=await temp(t);const file=path.join(dir,'note.txt');await fs.writeFile(file,'hello');const outputs=await Promise.all([convert(file,'md'),convert(file,'md')]);assert.notEqual(outputs[0],outputs[1]);assert.equal(await fs.readFile(file,'utf8'),'hello');});
 test('quoted CSV roundtrip preserves commas, quotes, multiline cells and special keys',async t=>{const dir=await temp(t);const file=path.join(dir,'table.csv');await fs.writeFile(file,'name,note,__proto__\nAda,"one, two",safe\nBob,"say ""hi""\nagain",value');const json=await convert(file,'json');const data=JSON.parse(await fs.readFile(json,'utf8'));assert.equal(data[1].note,'say "hi"\nagain');assert.equal(data[0].__proto__,'safe');const csv=await convert(json,'csv');assert.deepEqual(parseDelimited(await fs.readFile(csv,'utf8'),','),parseDelimited(await fs.readFile(file,'utf8'),','));});
 test('Markdown and images produce valid PDFs; PDF text extracts',async t=>{const dir=await temp(t);const file=path.join(dir,'note.md');await fs.writeFile(file,'# Hello\n\nA useful document.');const pdf=await convert(file,'pdf');assert.equal((await fs.readFile(pdf)).subarray(0,5).toString(),'%PDF-');const txt=await convert(pdf,'txt');assert.match(await fs.readFile(txt,'utf8'),/A useful document/);const img=path.join(dir,'image.png');await sharp({create:{width:10,height:10,channels:3,background:'red'}}).png().toFile(img);assert.equal((await fs.readFile(await convert(img,'pdf'))).subarray(0,5).toString(),'%PDF-');});
@@ -17,7 +19,7 @@ test('image-only PDFs render as actual images and reject text extraction',async 
  await sharp({create:{width:120,height:80,channels:3,background:'red'}}).png().toFile(source);
  const pdf=await convert(source,'pdf');
  for(const format of ['png','jpg','webp']){
-  const output=await convert(pdf,format);const meta=await sharp(output).metadata();
+  const output=await convert(pdf,format);const meta=await sharp(await fs.readFile(output)).metadata();
   assert.equal(meta.format,format==='jpg'?'jpeg':format);assert.ok(meta.width>0);
  }
  await assert.rejects(()=>convert(pdf,'txt'),/No embedded text/);
@@ -26,5 +28,5 @@ test('image-only PDFs render as actual images and reject text extraction',async 
 });
 test('SVG image input rasterizes to a real PNG',async t=>{
  const dir=await temp(t),source=path.join(dir,'icon.svg');await fs.writeFile(source,'<svg xmlns="http://www.w3.org/2000/svg" width="32" height="24"><rect width="32" height="24" fill="blue"/></svg>');
- const output=await convert(source,'png');assert.equal((await sharp(output).metadata()).format,'png');
+ const output=await convert(source,'png');assert.equal((await sharp(await fs.readFile(output)).metadata()).format,'png');
 });
