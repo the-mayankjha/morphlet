@@ -27,5 +27,11 @@ header{width:245px;gap:10px}#sound{display:grid;place-items:center;width:22px;he
 
 .sector.scroll-selected{fill:#ffffff40!important;stroke:#e6f4ff!important;stroke-width:2}.sector.scroll-selected+.label{font-weight:750;letter-spacing:1px}#wheel{will-change:clip-path}#center{transform-origin:50% 50%}
 
-/* Magnify a visual layer while leaving the actual drop/click geometry stable. */
-.magnify-overlay,.magnify-overlay *{pointer-events:none}.magnify-group{transform-origin:200px 200px;transform-box:view-box}.magnify-source{fill:#ffffff06!important;filter:none!important}.magnify-source+.label{opacity:0}.magnify-surface{fill:url(#hover-glass);stroke:#f2f8ffc0;stroke-width:1.5;filter:drop-shadow(0 5px 8px #06122245)}.magnify-label{font-size:16px;font-weight:700;letter-spacing:.7px;fill:#fff;text-anchor:middle;filter:drop-shadow(0 1px 2px #00000055)}[data-material=liquid] .magnify-label,[data-material=vibrancy] .magnify-label{fill:currentColor;filter:none}[data-material=liquid] .magnify-surface,[data-material=vibrancy] .magnify-surface{fill:#ffffff30;stroke:#ffffffb0}#center{transition:box-shadow .2s,border-color .2s}#wheel:has(.magnify-overlay) #center{border-color:#d7edff80;box-shadow:0 0 18px #c7e5ff12}
+/* Keep one continuous circle: magnify typography, never duplicate wedge geometry. */
+.label{transform-box:fill-box;transform-origin:center;transition:transform .2s cubic-bezier(.16,1,.3,1),font-weight .15s,opacity .15s}
+.sector.magnify-source{fill:#ffffff24!important;stroke:#ffffff60!important;stroke-width:1!important;filter:none!important}
+.sector.magnify-source+.label{opacity:1;transform:scale(1.24);font-weight:650;letter-spacing:.4px}
+.sector{filter:none!important}.sector.scroll-selected,.sector.drag-hover{stroke-width:1!important}
+#center{transition:border-color .2s,box-shadow .2s}
+#wheel:has(.magnify-source) #center{border-color:#cddff94d;box-shadow:inset 0 1px 2px #ffffff20}
+@media(prefers-reduced-motion:reduce){.label{transition:none}}

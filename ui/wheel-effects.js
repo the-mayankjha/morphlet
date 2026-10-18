@@ -1,20 +1,10 @@
 const MorphWheel=(()=>{
- const wheel=document.getElementById('wheel');let accumulated=0,lastScroll=0,index=-1,active=null,overlay=null;
+ const wheel=document.getElementById('wheel');let accumulated=0,lastScroll=0,index=-1,active=null;
  function highlight(sector){
- if(active===sector&&overlay?.isConnected)return;
- active?.classList.remove('magnify-source');overlay?.remove();active=sector;overlay=null;
+ if(active===sector&&(!sector||sector.isConnected))return;
+ active?.classList.remove('magnify-source');active=sector;
  if(!sector||document.body.classList.contains('busy'))return;
- sector.classList.add('magnify-source');const label=sector.nextElementSibling;
- const svg=sector.ownerSVGElement,ns='http://www.w3.org/2000/svg';
- const outer=document.createElementNS(ns,'g');outer.setAttribute('class','magnify-overlay');outer.setAttribute('aria-hidden','true');outer.setAttribute('pointer-events','none');
- const x=Number(label.getAttribute('x')),y=Number(label.getAttribute('y'))-6;
- const length=Math.hypot(x-200,y-200)||1;const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
- outer.setAttribute('transform',`translate(${(x-200)/length*7} ${(y-200)/length*7})`);
- const group=document.createElementNS(ns,'g');group.setAttribute('class','magnify-group');
- const surface=sector.cloneNode(false);surface.setAttribute('class','magnify-surface');surface.removeAttribute('tabindex');surface.removeAttribute('role');surface.removeAttribute('aria-label');
- const title=label.cloneNode(true);title.setAttribute('class','magnify-label');title.setAttribute('transform',`translate(${x} ${y+6}) scale(1.2) translate(${-x} ${-y-6})`);
- group.append(surface,title);outer.append(group);svg.append(outer);overlay=outer;
- group.animate([{transform:'scale(1)',opacity:.65},{transform:'scale(1.085)',opacity:1}],{duration:reduced?0:220,easing:'cubic-bezier(.16,1,.3,1)',fill:'forwards'});
+ sector.classList.add('magnify-source');
  }
  function open(drag=false){highlight(null);index=-1;accumulated=0;wheel.getAnimations().forEach(a=>a.cancel());document.querySelectorAll('.sector.scroll-selected').forEach(el=>el.classList.remove('scroll-selected'));if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
  wheel.animate([{clipPath:'circle(0% at 50% 50%)',opacity:.2},{clipPath:'circle(50% at 50% 50%)',opacity:1}],{duration:drag?210:340,easing:'cubic-bezier(.16,1,.3,1)'});
