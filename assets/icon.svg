@@ -1,1 +1,23 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024"><defs><linearGradient id="g" x2=".8" y2="1"><stop stop-color="#383838"/><stop offset="1" stop-color="#080808"/></linearGradient><linearGradient id="e" x2="1" y2="1"><stop stop-color="#fff" stop-opacity=".7"/><stop offset=".5" stop-color="#fff" stop-opacity=".08"/><stop offset="1" stop-color="#fff" stop-opacity=".35"/></linearGradient></defs><rect x="70" y="70" width="884" height="884" rx="220" fill="url(#g)" stroke="url(#e)" stroke-width="6"/><circle cx="512" cy="512" r="310" fill="none" stroke="#fff" stroke-opacity=".13" stroke-width="2"/><path d="M282 666V358h82l148 177 148-177h82v308h-91V495L512 657 373 495v171z" fill="#fff"/><path d="M340 255a310 310 0 0 1 343 0M340 769a310 310 0 0 0 343 0" fill="none" stroke="#fff" stroke-opacity=".7" stroke-width="12" stroke-linecap="round"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+<defs>
+ <linearGradient id="pane" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff" stop-opacity=".94"/><stop offset=".36" stop-color="#e4e7ed" stop-opacity=".82"/><stop offset=".68" stop-color="#b9bfca" stop-opacity=".63"/><stop offset="1" stop-color="#f8faff" stop-opacity=".92"/></linearGradient>
+ <linearGradient id="back" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff" stop-opacity=".8"/><stop offset=".52" stop-color="#c1c7d0" stop-opacity=".43"/><stop offset="1" stop-color="#eef1f6" stop-opacity=".83"/></linearGradient>
+ <linearGradient id="edge" x1="0" y1="0" x2="1" y2="1"><stop stop-color="#fff"/><stop offset=".4" stop-color="#fff" stop-opacity=".7"/><stop offset=".7" stop-color="#d5dbe5"/><stop offset="1" stop-color="#fff"/></linearGradient>
+ <linearGradient id="fold" x1="0" y1="1" x2="1" y2="0"><stop stop-color="#fff"/><stop offset=".32" stop-color="#e4e8ef"/><stop offset=".6" stop-color="#c0c7d2"/><stop offset=".85" stop-color="#f9fbff"/><stop offset="1" stop-color="#fff"/></linearGradient>
+ <linearGradient id="sheen" x1="0" y1="0" x2=".7" y2="1"><stop stop-color="#fff" stop-opacity=".55"/><stop offset=".58" stop-color="#fff" stop-opacity=".02"/><stop offset="1" stop-color="#fff" stop-opacity=".32"/></linearGradient>
+ <filter id="shadow" x="-.3" y="-.3" width="1.6" height="1.6"><feDropShadow dx="0" dy="16" stdDeviation="16" flood-color="#323b4b" flood-opacity=".24"/></filter>
+ <filter id="glow" x="-.2" y="-.2" width="1.4" height="1.4"><feGaussianBlur stdDeviation="7"/></filter>
+ <path id="sheet" d="M390 92 C337 82 304 115 304 172 V648 C304 703 326 728 378 742 L731 830 C804 849 853 810 853 737 V358 C853 329 842 310 825 288 L702 130 C690 115 677 110 652 106 Z"/>
+ <clipPath id="clip"><use href="#sheet"/></clipPath>
+</defs>
+<!-- Rear translucent sheet, rotated beneath the front document. -->
+<g transform="rotate(-23 475 537)" filter="url(#shadow)"><rect x="189" y="181" width="548" height="661" rx="99" fill="url(#back)" stroke="url(#edge)" stroke-width="9"/><rect x="203" y="195" width="520" height="633" rx="86" fill="none" stroke="#fff" stroke-opacity=".68" stroke-width="3"/><path d="M205 280 Q310 410 723 580 V730 Q723 812 650 824 H285 Q203 824 203 742Z" fill="url(#sheen)"/></g>
+<!-- Front document: translucent body, curved reflections and luminous bevel. -->
+<use href="#sheet" fill="url(#pane)" filter="url(#shadow)"/>
+<g clip-path="url(#clip)"><path d="M304 183 Q460 326 853 565 Q584 558 327 692 Q298 661 304 590Z" fill="url(#sheen)"/><path d="M315 683 Q516 505 852 471 V742 Q848 832 743 817 L380 730 Q336 719 315 683Z" fill="#fff" opacity=".12"/><path d="M323 640 V177 Q323 113 390 111 L650 125" fill="none" stroke="#fff" stroke-width="16" opacity=".75" filter="url(#glow)"/><path d="M337 697 Q346 718 391 729 L739 815 Q826 833 836 754 V371" fill="none" stroke="#fff" stroke-width="16" opacity=".85" filter="url(#glow)"/></g>
+<use href="#sheet" fill="none" stroke="url(#edge)" stroke-width="9"/>
+<path d="M386 110 Q323 99 323 173 V643 Q320 705 382 724 L734 813 Q834 838 835 742 V363" fill="none" stroke="#fff" stroke-opacity=".74" stroke-width="3"/>
+<!-- Softly rolled page corner. -->
+<path d="M652 108 C704 120 681 214 701 270 C723 332 803 285 853 358 C843 314 812 280 787 246 L705 140 Q684 112 652 108Z" fill="url(#fold)" stroke="#fff" stroke-opacity=".9" stroke-width="5"/>
+<path d="M663 117 C704 143 682 229 706 275 C729 316 798 286 838 335" fill="none" stroke="#fff" stroke-width="8" opacity=".7" filter="url(#glow)"/>
+</svg>
