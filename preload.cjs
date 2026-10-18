@@ -7,6 +7,8 @@ contextBridge.exposeInMainWorld('desktop',{
  onDragHover:callback=>ipcRenderer.on('drag-hover',(_event,value)=>callback(value)),
  onDragRelease:callback=>ipcRenderer.on('drag-release',(_event,value)=>callback(value)),
  material:(regions,expand=false)=>ipcRenderer.invoke('material',regions,expand),
+ appearance:()=>ipcRenderer.invoke('appearance'),setTheme:theme=>ipcRenderer.invoke('set-theme',theme),onAppearance:callback=>ipcRenderer.on('appearance',(_event,value)=>callback(value)),
+ studio:()=>ipcRenderer.invoke('studio'),
  hide:()=>ipcRenderer.invoke('hide'),pick:()=>ipcRenderer.invoke('pick'),
  drop:()=>{const files=droppedPaths;droppedPaths=[];return ipcRenderer.invoke('drop',files);},
  convert:(target,options)=>ipcRenderer.invoke('convert',{target,options}),

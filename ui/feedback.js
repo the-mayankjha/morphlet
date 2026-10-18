@@ -5,3 +5,6 @@ const MorphFeedback=(()=>{
  function button(){const el=document.getElementById('sound');el.setAttribute('aria-pressed',String(enabled));el.setAttribute('aria-label',enabled?'Mute sound effects':'Enable sound effects');el.title=enabled?'Mute sound effects':'Enable sound effects';el.textContent=enabled?'♪':'♩';}
  document.getElementById('sound').onclick=()=>{enabled=!enabled;try{localStorage.setItem('morphlet.sound',enabled?'on':'off');}catch{}button();play('select');};button();return {play};
 })();
+
+let currentAppearance='dark';function reflectAppearance(value){currentAppearance=value.theme;document.documentElement.dataset.theme=value.theme;window.dispatchEvent(new Event('morphlet-appearance'));document.getElementById('theme').title='Switch to '+(value.theme==='dark'?'light':'dark')+' theme';}
+window.desktop.onAppearance?.(reflectAppearance);window.desktop.appearance?.().then(reflectAppearance).catch(()=>{});document.getElementById('theme').onclick=()=>window.desktop.setTheme(currentAppearance==='dark'?'light':'dark').then(reflectAppearance);

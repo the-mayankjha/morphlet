@@ -1,6 +1,6 @@
 {
   "name": "morphlet",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Local-first desktop file conversion with a radial drop menu",
   "license": "MIT",
   "author": "Morphlet contributors",
@@ -11,7 +11,8 @@
     "dist": "electron-builder",
     "pack": "electron-builder --dir",
     "build:native": "node native/build.cjs",
-    "postinstall": "node native/build.cjs"
+    "postinstall": "node native/build.cjs",
+    "studio": "electron . --studio"
   },
   "dependencies": {
     "html-to-text": "^9.0.5",

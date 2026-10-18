@@ -1,3 +1,4 @@
+if(process.platform==='linux'){require('./build-linux.cjs');return;}
 
 const {spawnSync}=require('node:child_process');const fs=require('node:fs');const path=require('node:path');
 if(process.platform!=='darwin')process.exit(0);

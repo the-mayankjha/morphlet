@@ -2,9 +2,9 @@ const MorphWheel=(()=>{
  const wheel=document.getElementById('wheel');let accumulated=0,lastScroll=0,index=-1,active=null;
  function highlight(sector){
  if(active===sector&&(!sector||sector.isConnected))return;
- active?.classList.remove('magnify-source');active=sector;
+ const previous=active;previous?.classList.remove('magnify-source');previous?.nextElementSibling?.getAnimations().forEach(animation=>animation.cancel());active=sector;
  if(!sector||document.body.classList.contains('busy'))return;
- sector.classList.add('magnify-source');
+ sector.classList.add('magnify-source');const label=sector.nextElementSibling;if(!matchMedia('(prefers-reduced-motion: reduce)').matches){label.animate([{transform:'scale(1)',opacity:.7},{transform:'scale(1.42)',opacity:1,offset:.65},{transform:'scale(1.3)',opacity:1}],{duration:360,easing:'cubic-bezier(.16,1,.3,1)'});}
  }
  function open(drag=false){highlight(null);index=-1;accumulated=0;wheel.getAnimations().forEach(a=>a.cancel());document.querySelectorAll('.sector.scroll-selected').forEach(el=>el.classList.remove('scroll-selected'));if(matchMedia('(prefers-reduced-motion: reduce)').matches)return;
  wheel.animate([{clipPath:'circle(0% at 50% 50%)',opacity:.2},{clipPath:'circle(50% at 50% 50%)',opacity:1}],{duration:drag?210:340,easing:'cubic-bezier(.16,1,.3,1)'});
