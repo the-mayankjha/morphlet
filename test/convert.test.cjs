@@ -11,3 +11,20 @@ test('exclusive output paths survive concurrent conversions',async t=>{const dir
 test('quoted CSV roundtrip preserves commas, quotes, multiline cells and special keys',async t=>{const dir=await temp(t);const file=path.join(dir,'table.csv');await fs.writeFile(file,'name,note,__proto__\nAda,"one, two",safe\nBob,"say ""hi""\nagain",value');const json=await convert(file,'json');const data=JSON.parse(await fs.readFile(json,'utf8'));assert.equal(data[1].note,'say "hi"\nagain');assert.equal(data[0].__proto__,'safe');const csv=await convert(json,'csv');assert.deepEqual(parseDelimited(await fs.readFile(csv,'utf8'),','),parseDelimited(await fs.readFile(file,'utf8'),','));});
 test('Markdown and images produce valid PDFs; PDF text extracts',async t=>{const dir=await temp(t);const file=path.join(dir,'note.md');await fs.writeFile(file,'# Hello\n\nA useful document.');const pdf=await convert(file,'pdf');assert.equal((await fs.readFile(pdf)).subarray(0,5).toString(),'%PDF-');const txt=await convert(pdf,'txt');assert.match(await fs.readFile(txt,'utf8'),/A useful document/);const img=path.join(dir,'image.png');await sharp({create:{width:10,height:10,channels:3,background:'red'}}).png().toFile(img);assert.equal((await fs.readFile(await convert(img,'pdf'))).subarray(0,5).toString(),'%PDF-');});
 test('invalid requests fail without fake conversions',async t=>{const dir=await temp(t);const file=path.join(dir,'data.json');await fs.writeFile(file,'{"hello":1}');await assert.rejects(()=>convert(file,'png'),/Unsupported/);await assert.rejects(()=>convert(file,'csv'),/array of objects/);assert.deepEqual(targets('unknown.exe'),[]);assert.throws(()=>parseDelimited('a,"bad',','),/Unclosed/);});
+
+test('image-only PDFs render as actual images and reject text extraction',async t=>{
+ const dir=await temp(t),source=path.join(dir,'art.png');
+ await sharp({create:{width:120,height:80,channels:3,background:'red'}}).png().toFile(source);
+ const pdf=await convert(source,'pdf');
+ for(const format of ['png','jpg','webp']){
+  const output=await convert(pdf,format);const meta=await sharp(output).metadata();
+  assert.equal(meta.format,format==='jpg'?'jpeg':format);assert.ok(meta.width>0);
+ }
+ await assert.rejects(()=>convert(pdf,'txt'),/No embedded text/);
+ const {PDFParse}=require('pdf-parse');const parser=new PDFParse({data:await fs.readFile(pdf)});
+ try{const preview=await parser.getScreenshot({partial:[1],desiredWidth:900});assert.equal(preview.pages.length,1);assert.equal((await sharp(preview.pages[0].data).metadata()).width,900);}finally{await parser.destroy();}
+});
+test('SVG image input rasterizes to a real PNG',async t=>{
+ const dir=await temp(t),source=path.join(dir,'icon.svg');await fs.writeFile(source,'<svg xmlns="http://www.w3.org/2000/svg" width="32" height="24"><rect width="32" height="24" fill="blue"/></svg>');
+ const output=await convert(source,'png');assert.equal((await sharp(output).metadata()).format,'png');
+});

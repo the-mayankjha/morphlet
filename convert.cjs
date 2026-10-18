@@ -3,14 +3,14 @@ const path = require('node:path');
 const sharp = require('sharp');
 const PDFDocument = require('pdfkit');
 const { convert: htmlToText } = require('html-to-text');
-const images = ['png','jpg','jpeg','webp','avif','tif','tiff','gif'];
+const images = ['png','jpg','jpeg','webp','avif','tif','tiff','gif','svg'];
 const text = ['txt','md','markdown','html','htm'];
 const ext = file => path.extname(file).slice(1).toLowerCase();
 function targets(file) {
   const type = ext(file);
   if (images.includes(type)) return ['png','jpg','webp','avif','tiff','pdf'];
   if (text.includes(type)) return ['txt','md','html','pdf'];
-  if (type === 'pdf') return ['txt','md'];
+  if (type === 'pdf') return ['png','jpg','webp','txt','md'];
   if (type === 'json') return ['json','csv','tsv','txt'];
   if (['csv','tsv'].includes(type)) return ['csv','tsv','json','txt'];
   return [];
@@ -55,6 +55,8 @@ async function convert(file, target, options={}) {
       if (![left,top,width,height].every(Number.isInteger) || left<0 || top<0 || width<1 || height<1) throw Error('Invalid crop rectangle');
       image=image.extract({left,top,width,height});
     }
+    if(options.flip)image=image.flip();
+    if(options.flop)image=image.flop();
     if (options.width) { const width=Number(options.width); if (!Number.isInteger(width)||width<1||width>16000) throw Error('Width must be 1–16000 pixels'); image=image.resize({width,withoutEnlargement:true}); }
     const quality=Number(options.quality ?? 85);
     if (!Number.isInteger(quality)||quality<1||quality>100) throw Error('Quality must be 1–100');
@@ -62,7 +64,18 @@ async function convert(file, target, options={}) {
     else { if (target==='jpg') image=image.flatten({background:'#ffffff'}); output=await image.toFormat(target==='jpg'?'jpeg':target,{quality}).toBuffer(); }
   } else if (type==='pdf') {
     const { PDFParse }=require('pdf-parse'); const parser=new PDFParse({data:await fs.readFile(file)});
-    try { output=(await parser.getText()).text; if (!output.trim()) throw Error('No embedded text found. Scanned PDFs need OCR.'); } finally { await parser.destroy(); }
+    try {
+      if (['png','jpg','webp'].includes(target)) {
+        const rendered=await parser.getScreenshot({partial:[1],desiredWidth:1600});
+        if (!rendered.pages.length) throw Error('This PDF has no pages');
+        let image=sharp(rendered.pages[0].data);
+        if(target==='jpg')image=image.flatten({background:'#ffffff'});
+        output=await image.toFormat(target==='jpg'?'jpeg':target).toBuffer();
+      } else {
+        output=(await parser.getText({pageJoiner:''})).text;
+        if (!output.trim()) throw Error('No embedded text found. Scanned PDFs need OCR.');
+      }
+    } finally { await parser.destroy(); }
   } else if (['json','csv','tsv'].includes(type)) {
     const source=await fs.readFile(file,'utf8');
     let rows;

@@ -9,14 +9,16 @@
     "start": "electron .",
     "test": "node --test test/*.test.cjs",
     "dist": "electron-builder",
-    "pack": "electron-builder --dir"
+    "pack": "electron-builder --dir",
+    "build:native": "node native/build.cjs",
+    "postinstall": "node native/build.cjs"
   },
   "dependencies": {
-    "sharp": "^0.34.0",
-    "pdfkit": "^0.17.0",
-    "pdf-parse": "^2.4.0",
+    "html-to-text": "^9.0.5",
     "marked": "^16.0.0",
-    "html-to-text": "^9.0.5"
+    "pdf-parse": "^2.4.0",
+    "pdfkit": "^0.17.0",
+    "sharp": "^0.34.0"
   },
   "devDependencies": {
     "electron": "^43.0.0",
@@ -28,11 +30,13 @@
     "files": [
       "*.cjs",
       "ui/**/*",
-      "LICENSE"
+      "LICENSE",
+      "native/**/*"
     ],
     "asarUnpack": [
       "node_modules/sharp/**/*",
-      "node_modules/@img/**/*"
+      "node_modules/@img/**/*",
+      "native/*.node"
     ],
     "mac": {
       "target": [

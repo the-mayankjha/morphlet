@@ -29,15 +29,15 @@ The popup shell and conversion engine work across platforms. Automatic selection
 
 | Input | Output |
 | --- | --- |
-| PNG, JPEG, WebP, AVIF, TIFF, GIF | PNG, JPEG, WebP, AVIF, TIFF, PDF |
+| PNG, JPEG, WebP, AVIF, TIFF, GIF, SVG | PNG, JPEG, WebP, AVIF, TIFF, PDF |
 | TXT, Markdown, HTML | TXT, Markdown, HTML, PDF |
-| PDF with embedded text | TXT, Markdown |
+| PDF | PNG, JPG, WebP (first page); TXT, Markdown (embedded text only) |
 | JSON array of objects | CSV, TSV, pretty JSON, TXT |
 | CSV, TSV with unique headers | CSV, TSV, JSON, TXT |
 
-The engine supports quality, resizing and pixel cropping; those editing controls are not currently exposed in the minimal popup. Images auto-orient; JPEG transparency becomes white. GIF/TIFF input uses the first frame/page. Conversion strips image metadata. The same options apply to all files in a batch. Unsupported mixed batches must be separated into compatible groups.
+For a single image, click Crop & edit before choosing a format. Drag a crop rectangle, choose Free/1:1/16:9/9:16/4:3, or enter exact pixel coordinates. Resize width preserves proportions; flip, mirror and quality controls are also available. Apply edits returns to the format wheel. Reset restores original dimensions. Editing is currently limited to one selected image at a time. Images auto-orient; JPEG transparency becomes white. GIF/TIFF input uses the first frame/page. Conversion strips image metadata. The same options apply to all files in a batch. Unsupported mixed batches must be separated into compatible groups.
 
-Document conversion preserves content as text, not original page layout. Markdown becomes plain content for PDF and text-only HTML; HTML input is reduced to text. TXT/PDF to Markdown yields plain text valid as Markdown, without inferring headings. PDF export uses built-in PDF fonts: Latin text works; full multilingual font embedding is a future feature. Scanned PDF OCR, PDF page rasterization, editable PDF reconstruction, office documents, audio/video, archive conversion, and animated output are not implemented. Files are limited to 100 MB, images to 80 megapixels.
+Document conversion preserves content as text, not original page layout. Markdown becomes plain content for PDF and text-only HTML; HTML input is reduced to text. TXT/PDF to Markdown yields plain text valid as Markdown, without inferring headings. PDF export uses built-in PDF fonts: Latin text works; full multilingual font embedding is a future feature. Scanned PDF OCR, editable PDF reconstruction, office documents, audio/video, archive conversion, and animated output are not implemented. Files are limited to 100 MB, images to 80 megapixels.
 
 ## Verification
 
@@ -53,4 +53,18 @@ npm run dist
 
 Build on the target OS for macOS DMG/ZIP, Windows NSIS, and Linux AppImage/DEB. Native image dependencies are installed per platform. The included CI workflow tests and builds on all three platforms. Release signing/notarization credentials are not configured; distribution builds are unsigned. No published binaries are included.
 
-The renderer is sandboxed with context isolation and no Node access. Conversions run in the main process, sequentially per batch; very large files may temporarily affect responsiveness. A dedicated worker process, visual cropping, cancellation and Windows/Linux selection adapters are useful next steps.
+The renderer is sandboxed with context isolation and no Node access. Conversions run in the main process, sequentially per batch; very large files may temporarily affect responsiveness. A dedicated worker process, cancellation and Windows/Linux selection adapters are useful next steps.
+
+## Adaptive native glass
+
+On macOS 26+, Morphlet uses region-scoped `NSGlassEffectView` surfaces behind its transparent web content. The wheel is a native circular material; header, hints, and preview have separate rounded surfaces. macOS supplies the background-responsive material without screenshots, screen-recording permission, or a fixed CSS tint. Appearance follows the OS; accessibility settings can change transparency. Older macOS uses `NSVisualEffectView`; other platforms retain the portable CSS treatment.
+
+`npm install` builds the small Node-API bridge on macOS when development headers and Xcode Command Line Tools are available. To rebuild manually:
+
+```sh
+npm run build:native
+```
+
+Native loading and both circular and preview region application were verified on macOS 26.6.2, along with hidden startup and rejection of invalid geometry. Final visual appearance should be checked over your own desktop after restarting Morphlet.
+
+PDF results now show a rendered first-page image inside the popup, including image-only PDFs. Quick Look provides the full document. SVG input can be rasterized; PDF-to-image export currently uses page 1.
