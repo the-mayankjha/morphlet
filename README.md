@@ -267,3 +267,24 @@ For PNG and other raster inputs, choose **SVG image** in Studio:
 - **Trace editable paths** produces actual vector paths for logos and illustrations using a 64-color palette. It runs in a background worker, supports cancellation in Studio, and has a 1-megapixel input limit after edits. Crop or resize larger images explicitly. Tracing is approximate and may change colors, transparency or fine details, especially in photographs.
 
 Image quality now defaults to **100** in both Studio and the quick editor. PNG avoids palette quantization; TIFF uses lossless LZW; WebP and AVIF use lossless encoder modes at quality 100. JPEG uses quality 100 and 4:4:4 chroma by default but remains a lossy format. Lowering quality enables smaller lossy WebP/AVIF output. ICC profiles are retained where supported. Raster images retain their resolution unless resized and are not automatically enlarged. Format limitations, color-space conversion and source bit depth still affect fidelity; no conversion can create detail absent from the source.
+
+## PDF editing in Studio
+
+Add a PDF, select it, and click **Edit PDF** beside the workspace title. The editor opens a larger page workspace with a page list, zoom controls, editing tools and a properties panel.
+
+- Add selectable text with font family, size, bold, italic and color controls.
+- Place images and drawn signatures; drag, resize, keep proportions, duplicate, reorder layers or remove additions.
+- Add HTTP/HTTPS/mailto links with real clickable PDF annotations.
+- Add translucent highlights and outlined rectangles.
+- Navigate, rotate, reorder, duplicate or delete pages, insert blank pages, and merge ordinary PDFs.
+- Search embedded PDF text and jump to matching pages.
+- Fill existing standard AcroForm text, checkbox, dropdown, radio and option-list fields. Saved originals remain interactive.
+- Undo/redo additions and page changes. Use Cmd/Ctrl+Z, Shift+Cmd/Ctrl+Z or Ctrl+Y; Cmd/Ctrl+S saves a copy, and Delete/Backspace removes the selected addition outside text fields.
+
+**Save copy** writes a new `name-edited.pdf` beside the original or in the selected Studio output folder. Existing files are never overwritten. Edited results appear in Studio history and can be previewed. Drafts and undo history are held only for the editing session; closing the editor asks before discarding unsaved work.
+
+This release edits by adding content over the source page; it does not replace embedded paragraphs, reflow existing document text or securely redact underlying content. Drawn signatures are visual image marks, not cryptographic digital signatures. Standard fonts support Latin characters; unsupported text is rejected instead of silently losing glyphs. Search uses embedded text, not OCR. Text boxes must fit their content and stay within their page. Page edits are supported on rotated/cropped sources.
+
+Interactive-form source pages can be reordered and rotated, but must be retained exactly once to preserve their widget/field relationships. Duplicating/deleting those pages and merging interactive-form PDFs are blocked with an explanatory error; flatten a separate copy first if needed. XFA editing, password/encryption management, certificate signing, secure redaction and collaborative review are not included.
+
+Limits: 100 MB per PDF source, up to 10 source PDFs, 2,000 output pages and 500 additions; image additions are limited to 20 files, 20 MB per input, 40 megapixels and 64 MB of combined PNG assets.
