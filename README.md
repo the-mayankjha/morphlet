@@ -272,10 +272,12 @@ Image quality now defaults to **100** in both Studio and the quick editor. PNG a
 
 Add a PDF, select it, and click **Edit PDF** beside the workspace title. The editor opens a larger page workspace with a page list, zoom controls, editing tools and a properties panel.
 
+- Choose **Edit > Edit text**, then select a supported original text run to replace or delete it. The original active text operation is removed, preserving the page background and surrounding content.
 - Add selectable text with font family, size, bold, italic and color controls.
 - Place images and drawn signatures; drag, resize, keep proportions, duplicate, reorder layers or remove additions.
 - Add HTTP/HTTPS/mailto links with real clickable PDF annotations.
-- Add translucent highlights and outlined rectangles.
+- Choose **Annotate** for comments, highlights, underline, strikeout, freehand drawing and rectangles. The annotation sidebar lets you select notes and update or delete supported annotations from saved PDFs.
+- Use the contextual properties panel for content and styling; expand **Position & size** or **Page actions** when needed.
 - Navigate, rotate, reorder, duplicate or delete pages, insert blank pages, and merge ordinary PDFs.
 - Search embedded PDF text and jump to matching pages.
 - Fill existing standard AcroForm text, checkbox, dropdown, radio and option-list fields. Saved originals remain interactive.
@@ -283,8 +285,8 @@ Add a PDF, select it, and click **Edit PDF** beside the workspace title. The edi
 
 **Save copy** writes a new `name-edited.pdf` beside the original or in the selected Studio output folder. Existing files are never overwritten. Edited results appear in Studio history and can be previewed. Drafts and undo history are held only for the editing session; closing the editor asks before discarding unsaved work.
 
-This release edits by adding content over the source page; it does not replace embedded paragraphs, reflow existing document text or securely redact underlying content. Drawn signatures are visual image marks, not cryptographic digital signatures. Standard fonts support Latin characters; unsupported text is rejected instead of silently losing glyphs. Search uses embedded text, not OCR. Text boxes must fit their content and stay within their page. Page edits are supported on rotated/cropped sources.
+Original-text editing is conservative: supported horizontal text runs can be replaced, while scanned pages, reusable artwork and complex or ambiguous text streams remain read-only. Replacement uses standard fonts and does not reflow paragraphs or reproduce every embedded font. Deleting text removes its active page operation; this is **not secure redaction**, and unreferenced original data may remain in the PDF. Drawn signatures are visual image marks, not cryptographic digital signatures. Standard fonts support Latin characters; unsupported text is rejected instead of silently losing glyphs. Search uses embedded text, not OCR. Text boxes must fit their content and stay within their page. Page edits are supported on rotated/cropped sources.
 
 Interactive-form source pages can be reordered and rotated, but must be retained exactly once to preserve their widget/field relationships. Duplicating/deleting those pages and merging interactive-form PDFs are blocked with an explanatory error; flatten a separate copy first if needed. XFA editing, password/encryption management, certificate signing, secure redaction and collaborative review are not included.
 
-Limits: 100 MB per PDF source, up to 10 source PDFs, 2,000 output pages and 500 additions; image additions are limited to 20 files, 20 MB per input, 40 megapixels and 64 MB of combined PNG assets.
+Limits: 100 MB per PDF source, up to 10 source PDFs, 2,000 output pages and 500 edits; image additions are limited to 20 files, 20 MB per input, 40 megapixels and 64 MB of combined PNG assets.
