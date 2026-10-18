@@ -111,7 +111,7 @@ Converted files are saved beside the source as `name-converted.ext`, with numeri
 - Images auto-orient and metadata is stripped. Transparent pixels become white for JPEG.
 - PDF-to-image export and inline PDF preview use the first page. Quick Look can inspect the full PDF on macOS.
 - Plain TXT/Markdown exports require embedded text. AI-ready bundles optionally use installed Tesseract OCR for low-text pages and preserve full page images regardless.
-- Markdown-to-PDF renders heading sizes, bold/italic text, lists, code blocks, tables, quotes, links and standalone local images. HTML conversion remains text-oriented. PDF-to-Markdown reconstructs detected ruled tables and monospaced code; it does not guarantee the original layout or heading hierarchy.
+- Markdown-to-PDF renders heading sizes, bold/italic text, lists, code blocks, tables, quotes, links and standalone local images. HTML conversion remains text-oriented. PDF-to-Markdown reconstructs detected ruled tables and monospaced code; it infers heading hierarchy from typography and numbering but cannot guarantee the original layout or semantics.
 - PDF text export uses built-in fonts. Full multilingual font embedding is not implemented.
 - CSV/TSV-to-JSON expects unique headers and matching row widths.
 - Office documents, audio/video, archive input, and editable PDF reconstruction are not supported.
@@ -250,3 +250,9 @@ During quick-wheel conversion, the wheel gives way to a compact glass progress p
 **PDF to Markdown:** detected ruled tables become pipe tables with escaped cells. Monospaced text becomes fenced code with indentation inferred from its position. This applies to standalone `.md` and AI-ready bundle Markdown/chunks; raw text and table JSON remain available in bundles. Code fences and table headers are preserved when splitting long chunks. A table that cannot be located confidently is appended with an extraction note while its source text is retained. Scanned tables, borderless tables, proportional-font code, merged cells and complex columns may need manual correction.
 
 **Markdown to PDF:** `#` through `######` use distinct sizes, and paragraphs support bold, italics, inline code and links. Lists, task lists, fenced code, blockquotes, horizontal rules and Markdown tables receive document formatting. Long tables repeat their headers across pages. Standalone images may reference local files inside the Markdown source folder; remote images are not fetched. Built-in fonts currently limit multilingual coverage; LaTeX rendering, syntax highlighting and full HTML/CSS layout are not provided.
+
+### PDF heading hierarchy
+
+PDF Markdown exports infer title and section levels from document-wide font-size samples, font weight, spacing and numbered section depth. The same level is used across pages, with up to six Markdown heading levels. Repeated headers and page-number footers are filtered from structured Markdown; AI-bundle raw text still preserves the original extraction. Physical page references use comments such as `<!-- PDF page: 12 -->`, so they do not create fake sections in a Markdown outline. Wrapped heading lines are joined when their style and spacing agree. AI-bundle manifests include detected headings for each page.
+
+These are layout-based inferences, not author-supplied semantic tags. Scanned pages, visually ambiguous headings and unusual layouts may still need correction. The hierarchy model samples up to 12 pages across the document; the exported page images remain the visual reference.

@@ -76,7 +76,7 @@ async function convert(file, target, options={}) {
         const extracted=await parser.getText({pageJoiner:''});
         if(target==='md'){
           const reader=await require('./pdf-markdown.cjs').createMarkdownReader(await fs.readFile(file));const pages=[];
-          try{for(const page of extracted.pages){let tables=[];try{tables=(await parser.getTable({partial:[page.num]})).pages[0]?.tables||[];}catch{}const structured=await reader.page(page.num,tables);pages.push(`## Page ${page.num}\n\n`+structured.markdown);}}finally{await reader.destroy();}
+          try{for(const page of extracted.pages){let tables=[];try{tables=(await parser.getTable({partial:[page.num]})).pages[0]?.tables||[];}catch{}const structured=await reader.page(page.num,tables);pages.push(`<!-- PDF page: ${page.num} -->\n\n`+structured.markdown);}}finally{await reader.destroy();}
           output=pages.join('\n\n');
         }else output=extracted.pages.map(page=>`--- Page ${page.num} ---\n\n`+page.text.trim()).join('\n\n');
         if (!extracted.pages.some(page=>page.text.trim())) throw Error('No embedded text found. Scanned PDFs need OCR.');
