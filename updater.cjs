@@ -2,7 +2,7 @@ const fs=require('node:fs/promises'),path=require('node:path'),crypto=require('n
 const REPO='https://github.com/the-mayankjha/morphlet',API='https://api.github.com/repos/the-mayankjha/morphlet/releases/latest';
 function version(value){const m=/^v?(\d+)\.(\d+)\.(\d+)$/.exec(value||'');return m&&m.slice(1).map(Number);}
 function newer(a,b){a=version(a);b=version(b);if(!a||!b)return false;for(let i=0;i<3;i++){if(a[i]!==b[i])return a[i]>b[i];}return false;}
-function assetFor(assets,platform,arch,env={}){const suffix=platform==='darwin'?new RegExp(`-mac-${arch}\\.dmg$`):platform==='win32'?new RegExp(`-windows-${arch}-setup\\.exe$`):platform==='linux'?new RegExp(`-linux-${arch}\\.${env.APPIMAGE?'AppImage':'deb'}$`):null;return suffix&&assets.find(a=>suffix.test(a.name));}
+function assetFor(assets,platform,arch,env={}){const suffix=platform==='darwin'?new RegExp(`-mac-${arch}\\.dmg$`):platform==='win32'?new RegExp(`-windows-${arch}-setup\\.exe$`):platform==='linux'?new RegExp(`-linux-${arch==='x64'?'(?:x64|amd64|x86_64)':arch}\\.${env.APPIMAGE?'AppImage':'deb'}$`):null;return suffix&&assets.find(a=>suffix.test(a.name));}
 function trusted(url){try{const u=new URL(url);return u.protocol==='https:'&&u.origin==='https://github.com'&&u.pathname.startsWith('/the-mayankjha/morphlet/releases/download/')&&!u.username&&!u.password;}catch{return false;}}
 function createUpdater({app,Notification,shell,onChange=()=>{},onOpen=()=>{},fetchImpl=fetch,platform=process.platform,arch=process.arch,env=process.env}){
  const directory=path.join(app.getPath('userData'),'updates'),preferences=path.join(directory,'settings.json');let autoCheck=true,notified='',timer,initialTimer,checking,downloading,release,asset,downloaded;
