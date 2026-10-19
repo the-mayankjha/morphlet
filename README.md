@@ -54,13 +54,52 @@ Download a package for your system from [Releases](https://github.com/the-mayank
 
 On macOS, open the DMG and drag Morphlet into Applications. On Windows, run the installer. On Linux, install the DEB with your package manager, or make the AppImage executable and run it. AppImages may require FUSE support supplied by your distribution.
 
-**Current packages are unsigned and macOS builds are not notarized.** Your operating system may display a security prompt or block launch. Review the source and use the source instructions below if you prefer. A completed build does not certify that every desktop integration works on that platform.
+**Windows installers are unsigned. From v1.2.2, macOS builds are ad-hoc signed but have no Apple Developer ID and are not notarized.** Your operating system may display a security prompt or block launch. Review the source and use the source instructions below if you prefer. A completed build does not certify that every desktop integration works on that platform.
 
 ### macOS “damaged” or “corrupted” message
 
 The v1.2.1 macOS package was found to contain an incompletely signed application, even though the disk image checksum was valid. The build now explicitly ad-hoc signs the complete app and verifies its nested code and disk image before collecting release artifacts. A valid disk image checksum alone does not validate the app signature.
 
 Ad-hoc signing verifies bundle integrity; it does **not** establish an Apple Developer ID or provide notarization. For standard Gatekeeper distribution, the project still needs an Apple Developer ID Application certificate and Apple notarization. Do not disable Gatekeeper to work around a broken package. You can verify a downloaded DMG with `hdiutil verify` and the app with `codesign --verify --deep --strict --verbose=2`.
+
+### Install and open Morphlet on macOS
+
+Morphlet’s macOS builds are ad-hoc signed and are not notarized by Apple. The screenshots show macOS’s first-launch verification warning, not proof that the app is corrupted. Only proceed if you trust Morphlet and downloaded it from the official GitHub release.
+
+1. **Install the right download.** Choose Apple Silicon for M-series Macs or Intel for Intel Macs. Open the DMG, drag Morphlet into Applications, then eject the disk image. Launch the installed copy from Applications.
+2. **Dismiss the first warning.** If macOS says “Morphlet Not Opened” and that Apple could not verify it, click Done. Do not choose Move to Bin if you intend to continue with this trusted download.
+3. **Find the blocked app.** Open Apple menu → System Settings → Privacy & Security. Scroll down to the Security section and find the message that Morphlet was blocked.
+4. **Approve this app, if you trust it.** Click Open Anyway beside Morphlet. Authenticate with your password or Touch ID if macOS requests it. In the confirmation dialog, review the app name and choose Open Anyway (or Open, depending on your macOS version).
+5. **Open your workspace.** Look for the Morphlet icon in the menu bar and choose Morphlet Studio or Choose files. Morphlet runs as a background utility, so an empty Dock or no window on launch is expected.
+
+#### First-launch screenshots
+
+**1. First launch: macOS cannot verify the unnotarized app.**
+
+<img src="docs/images/mac-install/mac-first-open.png" alt="Morphlet Not Opened warning after launching the downloaded app" width="760">
+
+**2. Open System Settings, then Privacy & Security. Scroll to Security.**
+
+<img src="docs/images/mac-install/mac-privacy-security.png" alt="System Settings Privacy and Security showing Morphlet blocked with Open Anyway" width="760">
+
+**3. Review the Morphlet entry, then choose Open Anyway if you trust the download.**
+
+<img src="docs/images/mac-install/mac-open-anyway.png" alt="Close-up of the Morphlet Open Anyway button in macOS Security settings" width="760">
+
+**4. Review the final confirmation and choose Open Anyway to launch.**
+
+<img src="docs/images/mac-install/mac-confirm-open.png" alt="macOS Open Morphlet confirmation with an Open Anyway button" width="760">
+
+#### Using Morphlet on your Mac
+
+- **Quick conversion:** Select files in Finder and press Option+C. Choose an output format from the wheel and preview the new file. If macOS asks to let Morphlet control Finder, approve it only when you want this integration; review it in Privacy & Security → Automation.
+- **Drag to the wheel:** Start dragging a supported file in Finder, then hold Option to open the wheel. Drop onto a compatible format. You can also add files directly in Studio.
+- **Use Studio:** Open Morphlet Studio from the menu-bar menu to convert files, crop or resize images, and edit supported PDFs. Outputs are saved as new copies.
+- **Keep it available:** Closing Studio keeps Morphlet running in the background. Use Quit Morphlet from the menu-bar menu to stop it. Launch at login is optional.
+
+**Different warning or no Open Anyway button?** If macOS explicitly says Morphlet is damaged, modified or contains malware, stop and verify the download rather than treating it as the first-launch warning shown above. Download the latest official release and compare the SHA-256 checksum. If the button is missing, try opening the installed app once more and return to Privacy & Security. Managed Macs may require administrator help.
+
+Keep macOS security protections enabled; this flow applies only to an app you have chosen to trust. See [Apple’s guidance on opening apps safely](https://support.apple.com/102445). Screenshots show macOS with Morphlet v1.2.2; wording may differ by system version.
 
 ## Use Morphlet
 
