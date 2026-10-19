@@ -97,6 +97,28 @@ Morphlet’s macOS builds are ad-hoc signed and are not notarized by Apple. The 
 - **Use Studio:** Open Morphlet Studio from the menu-bar menu to convert files, crop or resize images, and edit supported PDFs. Outputs are saved as new copies.
 - **Keep it available:** Closing Studio keeps Morphlet running in the background. Use Quit Morphlet from the menu-bar menu to stop it. Launch at login is optional.
 
+#### macOS permissions
+
+**Finder Automation — needed for Option+C only**
+
+1. Open Morphlet, select a supported file in Finder, and press **Option+C** once to trigger the permission request.
+2. If macOS asks whether Morphlet may control Finder, choose **Allow** if you want this integration.
+3. If access was denied, open **System Settings → Privacy & Security → Automation**. Expand **Morphlet** and enable **Finder**.
+4. macOS may ask for **Touch ID or your Mac account password** to authorize the change. Authenticate in the macOS system dialog; Morphlet does not collect this password.
+5. Return to Finder, select the files again, and press **Option+C**. Quit and reopen Morphlet if needed. In development, the requesting app may be named **Electron**.
+
+<img src="docs/images/mac-install/mac-finder-automation.png" alt="macOS Automation settings showing Morphlet, the Finder permission switch and a system authentication prompt" width="760">
+
+The screenshot shows a macOS authentication prompt while changing Finder Automation access.
+
+| Permission or setting | When it is needed | What to do |
+| --- | --- | --- |
+| **Automation → Morphlet → Finder** | Reading selected Finder files with Option+C | Allow the Finder integration if you use this shortcut. |
+| **Files & Folders** | If macOS requests access to a folder you are working with | Grant only the locations you intend to use. Choose a writable save folder in Studio. |
+| **Launch at login** | Optional automatic startup | Enable it from the menu-bar menu. Review it in System Settings → General → Login Items & Extensions (wording varies by macOS version). |
+
+You can leave Finder Automation disabled and use **Choose files**, add files in Studio, or drag files into Studio. Revoke Finder access later by turning its switch off in Automation. Standard file conversion does not need Full Disk Access, Screen Recording, camera or microphone access; do not grant unrelated permissions to troubleshoot the shortcut.
+
 **Different warning or no Open Anyway button?** If macOS explicitly says Morphlet is damaged, modified or contains malware, stop and verify the download rather than treating it as the first-launch warning shown above. Download the latest official release and compare the SHA-256 checksum. If the button is missing, try opening the installed app once more and return to Privacy & Security. Managed Macs may require administrator help.
 
 Keep macOS security protections enabled; this flow applies only to an app you have chosen to trust. See [Apple’s guidance on opening apps safely](https://support.apple.com/102445). Screenshots show macOS with Morphlet v1.2.2; wording may differ by system version.
