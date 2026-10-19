@@ -419,3 +419,15 @@ Created by **Mayank Kumar Jha** ([the-mayankjha](https://github.com/the-mayankjh
 ## License
 
 [MIT](LICENSE). Dependencies retain their respective licenses.
+
+### Quick editing tools
+
+Tap Shift for conversions, or Cmd on macOS / Ctrl on Windows for editing tools. Configure both keys in Studio Settings. GNOME Files uses the installed Morphlet and Morphlet Tools actions.
+
+Quick tools use a compact popup with a preview and scrollable controls. Image tools include crop, resize, quality, mirror, flip, background frames, compression, and solid-color background removal. Open in Studio provides the full PDF editor and image controls. Background removal is color-based, not AI segmentation.
+
+Select multiple images to combine them into a PDF or a Word (.docx) document. Adjust their order before saving; each image occupies its own page. Images remain images in Word, rather than becoming editable text. Originals are preserved.
+
+### Update checks
+
+Check for newer stable releases in Studio Settings, the Help menu, or the tray menu. Installed builds check at startup and every six hours, with one notification per new release. Automatic checks can be disabled in Settings. Downloads start only when requested and are verified with SHA-256 before opening the installer. macOS uses a DMG installer without requiring Developer ID; replace the app in Applications. Windows opens the setup installer; Linux uses a DEB installer or reveals a downloaded AppImage for manual replacement. Save your work before updating.

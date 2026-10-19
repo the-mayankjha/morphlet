@@ -8,13 +8,15 @@
 static const void *RegionsKey = &RegionsKey;
 static double number(napi_env env,napi_value obj,const char *key){napi_value v;double d=0;napi_get_named_property(env,obj,key,&v);napi_get_value_double(env,v,&d);return d;}
 static napi_value apply(napi_env env,napi_callback_info info){
- size_t argc=4;napi_value args[4];napi_get_cb_info(env,info,&argc,args,nullptr,nullptr);
+ size_t argc=5;napi_value args[5];napi_get_cb_info(env,info,&argc,args,nullptr,nullptr);
  void *bytes=nullptr;size_t length=0;bool buffer=false;
  if(argc<2||napi_is_buffer(env,args[0],&buffer)!=napi_ok||!buffer){napi_throw_type_error(env,nullptr,"Expected a native window handle");return nullptr;}
  napi_get_buffer_info(env,args[0],&bytes,&length);if(length<sizeof(void*)){napi_throw_type_error(env,nullptr,"Invalid handle");return nullptr;}
  bool expand=false;if(argc>2)napi_get_value_bool(env,args[2],&expand);char theme[16]={0};if(argc>3)napi_get_value_string_utf8(env,args[3],theme,sizeof(theme),nullptr);
  NSView *root=(__bridge NSView *)*(void **)bytes;
  if(![NSThread isMainThread]||!root){napi_throw_error(env,nullptr,"Native material requires the main thread");return nullptr;}
+ bool closeOnly=false;if(argc>4)napi_get_value_bool(env,args[4],&closeOnly);
+ if(closeOnly&&root.window){[root.window standardWindowButton:NSWindowMiniaturizeButton].hidden=YES;[root.window standardWindowButton:NSWindowZoomButton].hidden=YES;[root.window standardWindowButton:NSWindowCloseButton].hidden=NO;}
  // Reassigning an unchanged NSWindow appearance can emit another Electron
  // nativeTheme.updated event, causing a material-rebuild feedback loop.
  NSString *appearanceName=strcmp(theme,"light")==0?NSAppearanceNameAqua:NSAppearanceNameDarkAqua;

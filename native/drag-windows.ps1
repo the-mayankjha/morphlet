@@ -1,4 +1,4 @@
-param([switch]$SelfTest,[switch]$SelectionOnly,[ValidateSet("control","alt","disabled")][string]$Modifier="control")
+param([switch]$SelfTest,[switch]$SelectionOnly,[ValidateSet("control","alt","shift","disabled")][string]$Modifier="control",[ValidateSet("control","alt","shift","disabled")][string]$ConvertModifier="shift")
 $ErrorActionPreference = 'Stop'
 [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false)
 Add-Type @'
@@ -13,6 +13,7 @@ public static class MorphletPointer {
   for(int key=8;key<255;key++) {
    if(modifier==0x12&&(key==0x12||key==0xA4||key==0xA5))continue;
    if(modifier==0x11&&(key==0x11||key==0xA2||key==0xA3))continue;
+   if(modifier==0x10&&(key==0x10||key==0xA0||key==0xA1))continue;
    if((GetAsyncKeyState(key)&0x8000)!=0)return true;
   }
   return false;
@@ -32,42 +33,46 @@ function Get-ExplorerFiles([long]$handle) {
  } } catch { }
  return $files
 }
-# A tap must end in its original foreground window and must not be part of a
-# mouse gesture or another keyboard shortcut (Alt+Tab, Alt+C, Alt+F4, AltGr...).
-$script:wasAlt=$false; $script:altUsed=$false; $script:altWindow=0
-function Update-AltTap([bool]$alt,[bool]$used,[long]$foreground) {
- $fire=$false
- if ($alt -and -not $script:wasAlt) { $script:altWindow=$foreground; $script:altUsed=$used }
- if ($alt -and $used) { $script:altUsed=$true }
- if (-not $alt -and $script:wasAlt) { $fire=(-not $script:altUsed -and -not $used -and $foreground -eq $script:altWindow) }
- $script:wasAlt=$alt
- return $fire
+# Separate tap state for conversion and editing; shortcuts and clicks cancel.
+$script:gestures=@{tools=@{was=$false;used=$false;owner=0};convert=@{was=$false;used=$false;owner=0}}
+function Update-ModifierTap([string]$mode,[bool]$pressed,[bool]$used,[long]$foreground) {
+ $state=$script:gestures[$mode]; $fire=$false
+ if ($pressed -and -not $state.was) { $state.owner=$foreground; $state.used=$used }
+ if ($pressed -and $used) { $state.used=$true }
+ if (-not $pressed -and $state.was) { $fire=(-not $state.used -and -not $used -and $foreground -eq $state.owner) }
+ $state.was=$pressed; return $fire
 }
 if ($SelfTest) {
- if (Update-AltTap $true $false 7) { throw 'Alt fired before release' }
- if (-not (Update-AltTap $false $false 7)) { throw 'Alt tap did not fire' }
- [void](Update-AltTap $true $false 7); [void](Update-AltTap $true $true 7)
- if (Update-AltTap $false $false 7) { throw 'Alt shortcut triggered selection' }
- [void](Update-AltTap $true $false 7)
- if (Update-AltTap $false $false 8) { throw 'Changed foreground triggered selection' }
- [void](Update-AltTap $true $true 7)
- if (Update-AltTap $false $false 7) { throw 'Alt drag triggered selection' }
- [Console]::WriteLine('{"ready":true,"altTapTests":4}'); exit 0
+ foreach ($mode in @('tools','convert')) {
+  if (Update-ModifierTap $mode $true $false 7) { throw 'Gesture fired before release' }
+  if (-not (Update-ModifierTap $mode $false $false 7)) { throw 'Tap did not fire' }
+  [void](Update-ModifierTap $mode $true $false 7); [void](Update-ModifierTap $mode $true $true 7)
+  if (Update-ModifierTap $mode $false $false 7) { throw 'Keyboard shortcut triggered wheel' }
+  [void](Update-ModifierTap $mode $true $false 7)
+  if (Update-ModifierTap $mode $false $false 8) { throw 'Changed foreground triggered wheel' }
+  [void](Update-ModifierTap $mode $true $true 7)
+  if (Update-ModifierTap $mode $false $false 7) { throw 'Modifier-click triggered wheel' }
+ }
+ [Console]::WriteLine('{"ready":true,"modifierTests":8}'); exit 0
 }
 if ($SelectionOnly) {
  $files=@(Get-ExplorerFiles ([MorphletPointer]::GetForegroundWindow().ToInt64()))
  [Console]::WriteLine((@{files=@($files)} | ConvertTo-Json -Compress -Depth 3)); exit 0
 }
-$modifierKey=if ($Modifier -eq "alt") { 0x12 } else { 0x11 }
 $wasDown=$false; $fired=$false; $origin=New-Object MorphletPointer+Point; $dragWindow=0
 while ($true) {
  $down=([MorphletPointer]::GetAsyncKeyState(1) -band 0x8000) -ne 0
  $alt=([MorphletPointer]::GetAsyncKeyState(0x12) -band 0x8000) -ne 0
  $foreground=[MorphletPointer]::GetForegroundWindow().ToInt64()
- $pressed=($Modifier -ne "disabled") -and (([MorphletPointer]::GetAsyncKeyState($modifierKey) -band 0x8000) -ne 0)
- $other=$false; if ($pressed -or $script:wasAlt) { $other=[MorphletPointer]::OtherKeyDown($modifierKey) }
- $tap=Update-AltTap $pressed ($down -or $other -or $fired) $foreground
- if ($tap) { $files=@(Get-ExplorerFiles $foreground); if ($files.Count) { [Console]::WriteLine((@{type='selection';files=@($files)} | ConvertTo-Json -Compress -Depth 3)) } }
+ foreach ($mode in @('tools','convert')) {
+  $setting=if ($mode -eq 'tools') { $Modifier } else { $ConvertModifier }
+  $key=if ($setting -eq 'alt') { 0x12 } elseif ($setting -eq 'shift') { 0x10 } else { 0x11 }
+  $pressed=($setting -ne 'disabled') -and (([MorphletPointer]::GetAsyncKeyState($key) -band 0x8000) -ne 0)
+  $other=$false; if ($pressed -or $script:gestures[$mode].was) { $other=[MorphletPointer]::OtherKeyDown($key) }
+  if (Update-ModifierTap $mode $pressed ($down -or $other -or $fired) $foreground) {
+   $files=@(Get-ExplorerFiles $foreground); if ($files.Count) { [Console]::WriteLine((@{type='selection';mode=$mode;files=@($files)} | ConvertTo-Json -Compress -Depth 3)) }
+  }
+ }
  $point=New-Object MorphletPointer+Point; [void][MorphletPointer]::GetCursorPos([ref]$point)
  if ($down -and -not $wasDown) { $origin=$point; $fired=$false; $dragWindow=$foreground }
  if (-not $down -and $wasDown) { [Console]::WriteLine('{"type":"release"}'); $fired=$false }
