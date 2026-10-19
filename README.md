@@ -94,20 +94,20 @@ Morphlet’s macOS builds are ad-hoc signed and are not notarized by Apple. The 
 
 #### Using Morphlet on your Mac
 
-- **Quick conversion:** Select files in Finder and press Option+C. Choose an output format from the wheel and preview the new file. If macOS asks to let Morphlet control Finder, approve it only when you want this integration; review it in Privacy & Security → Automation.
+- **Quick conversion:** Select files in Finder and press Cmd. Choose an output format from the wheel and preview the new file. If macOS asks to let Morphlet control Finder, approve it only when you want this integration; review it in Privacy & Security → Automation.
 - **Drag to the wheel:** Start dragging a supported file in Finder, then hold Option to open the wheel. Drop onto a compatible format. You can also add files directly in Studio.
 - **Use Studio:** Open Morphlet Studio from the menu-bar menu to convert files, crop or resize images, and edit supported PDFs. Outputs are saved as new copies.
 - **Keep it available:** Closing Studio keeps Morphlet running in the background. Use Quit Morphlet from the menu-bar menu to stop it. Launch at login is optional.
 
 #### macOS permissions
 
-**Finder Automation — needed for Option+C only**
+**Finder Automation — needed for Cmd only**
 
-1. Open Morphlet, select a supported file in Finder, and press **Option+C** once to trigger the permission request.
+1. Open Morphlet, select a supported file in Finder, and press **Cmd** once to trigger the permission request.
 2. If macOS asks whether Morphlet may control Finder, choose **Allow** if you want this integration.
 3. If access was denied, open **System Settings → Privacy & Security → Automation**. Expand **Morphlet** and enable **Finder**.
 4. macOS may ask for **Touch ID or your Mac account password** to authorize the change. Authenticate in the macOS system dialog; Morphlet does not collect this password.
-5. Return to Finder, select the files again, and press **Option+C**. Quit and reopen Morphlet if needed. In development, the requesting app may be named **Electron**.
+5. Return to Finder, select the files again, and press **Cmd**. Quit and reopen Morphlet if needed. In development, the requesting app may be named **Electron**.
 
 <img src="docs/images/mac-install/mac-finder-automation.png" alt="macOS Automation settings showing Morphlet, the Finder permission switch and a system authentication prompt" width="760">
 
@@ -115,7 +115,7 @@ The screenshot shows a macOS authentication prompt while changing Finder Automat
 
 | Permission or setting | When it is needed | What to do |
 | --- | --- | --- |
-| **Automation → Morphlet → Finder** | Reading selected Finder files with Option+C | Allow the Finder integration if you use this shortcut. |
+| **Automation → Morphlet → Finder** | Reading selected Finder files with Cmd | Allow the Finder integration if you use this shortcut. |
 | **Files & Folders** | If macOS requests access to a folder you are working with | Grant only the locations you intend to use. Choose a writable save folder in Studio. |
 | **Launch at login** | Optional automatic startup | Enable it from the menu-bar menu. Review it in System Settings → General → Login Items & Extensions (wording varies by macOS version). |
 
@@ -131,7 +131,7 @@ Keep macOS security protections enabled; this flow applies only to an app you ha
 
 1. Start Morphlet; it stays in the menu bar without a dashboard.
 2. Select one or more files in **Finder**.
-3. Press **Option+C** to open the wheel near your pointer.
+3. Press **Cmd** to open the wheel near your pointer.
 4. Click an output format.
 5. Preview the result, use **Quick Look**, or select **Show in Finder**.
 
@@ -143,7 +143,7 @@ Start dragging a file, hold **Option**, and drop it onto a format wedge. The whe
 
 ### Choose files on any platform
 
-Use the menu bar/system tray icon → **Choose files…**. Windows and Linux also support this workflow; see the drag compatibility notes below. **Alt+C** opens the popup with guidance and a file-picker fallback on these systems. Shortcut registration can depend on the desktop or conflict with another app.
+Use the menu bar/system tray icon → **Choose files…**. Windows and Linux also support this workflow; see the drag compatibility notes below. On Windows, tap **Ctrl** after selecting files in Explorer. For GNOME Files use the installed **Scripts → Morphlet** action. Configure the selection modifier in Studio Settings; modifier-only capture is unavailable on GNOME Wayland.
 
 The wheel expands from its center, including the native glass surface. Scroll over it to step through formats with a tactile tick, then press Enter to convert. The selected format label magnifies within its segment for pointer hover, dragging, keyboard focus, and scrolling. The wheel contour and click/drop targets remain fixed. Arrow keys move between formats; Enter or Space selects one. Quiet local sound effects signal opening, hovering, selection, and results. The note button in the header mutes them and remembers your preference. Reduced-motion settings disable decorative animation.
 
