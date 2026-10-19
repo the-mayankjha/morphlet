@@ -1,6 +1,6 @@
 {
   "name": "morphlet",
-  "version": "1.2.3",
+  "version": "1.3.0",
   "description": "Local-first desktop file conversion with a radial drop menu",
   "license": "MIT",
   "author": "Mayank Kumar Jha",
