@@ -10,7 +10,21 @@ function createStudio({onWheel,keepWindow=()=>{}}){
  async function open(files=[]){if(!window||window.isDestroyed()){
   window=new BrowserWindow({width:1280,height:860,minWidth:1020,minHeight:720,title:'Morphlet Studio',skipTaskbar:false,icon:path.join(__dirname,'assets/icon.png'),backgroundColor:glass?'#00000000':'#101010',transparent:!!glass,...(process.platform==='darwin'?{titleBarStyle:'hiddenInset',trafficLightPosition:{x:18,y:23}}:{}),webPreferences:{preload:path.join(__dirname,'studio-preload.cjs'),contextIsolation:true,nodeIntegration:false,sandbox:true}});
   studioMenu=require('./studio-menu.cjs').attachStudioMenu(window);keepWindow(window);window.loadFile('ui/studio/index.html');
-  const nativeMaterial=applyMaterial=()=>{if(!window||window.isDestroyed()||!glass)return;const [width,height]=window.getContentSize();const top=Math.min(height-1,sidebarBox.top),side=Math.min(width-1,sidebarBox.width);material=glass.apply(window.getNativeWindowHandle(),[{x:0,y:0,width,height:top,radius:0},{x:0,y:top,width:side,height:height-top,radius:0},{x:side,y:top,width:width-side,height:height-top,radius:0}],false,appearance.getAppearance().theme);window.webContents.send('studio:state',snapshot());};let resizeTimer;window.webContents.once('did-finish-load',nativeMaterial);window.on('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(nativeMaterial,80);});require('electron').nativeTheme.on('updated',nativeMaterial);window.on('closed',()=>{clearTimeout(resizeTimer);require('electron').nativeTheme.removeListener('updated',nativeMaterial);});window.webContents.setWindowOpenHandler(()=>({action:'deny'}));window.webContents.on('will-navigate',e=>e.preventDefault());
+  // Native appearance updates can synchronously emit nativeTheme.updated. Apply
+  // only changed layouts/themes, and never reload previews for a material update.
+  let materialKey='',applyingMaterial=false;
+  const nativeMaterial=applyMaterial=()=>{
+   if(!window||window.isDestroyed()||!glass||applyingMaterial)return;
+   const [width,height]=window.getContentSize(),theme=appearance.getAppearance().theme;
+   const top=Math.min(height-1,sidebarBox.top),side=Math.min(width-1,sidebarBox.width);
+   const key=JSON.stringify([width,height,top,side,theme]);if(key===materialKey)return;
+   applyingMaterial=true;
+   try{
+    const next=glass.apply(window.getNativeWindowHandle(),[{x:0,y:0,width,height:top,radius:0},{x:0,y:top,width:side,height:height-top,radius:0},{x:side,y:top,width:width-side,height:height-top,radius:0}],false,theme);
+    materialKey=key;
+    if(material!==next){material=next;window.webContents.send('studio:state',snapshot());}
+   }finally{applyingMaterial=false;}
+  };let resizeTimer;window.webContents.once('did-finish-load',nativeMaterial);window.on('resize',()=>{clearTimeout(resizeTimer);resizeTimer=setTimeout(nativeMaterial,80);});require('electron').nativeTheme.on('updated',nativeMaterial);window.on('closed',()=>{clearTimeout(resizeTimer);require('electron').nativeTheme.removeListener('updated',nativeMaterial);});window.webContents.setWindowOpenHandler(()=>({action:'deny'}));window.webContents.on('will-navigate',e=>e.preventDefault());
 
  }
  if(files.length)await add(files);window.show();window.focus();if(!window.webContents.isLoading())window.webContents.send('studio:state',snapshot());return snapshot();}
