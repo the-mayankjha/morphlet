@@ -42,7 +42,8 @@
     "asarUnpack": [
       "node_modules/sharp/**/*",
       "node_modules/@img/**/*",
-      "native/*.node"
+      "native/*.node",
+      "native/*.ps1"
     ],
     "mac": {
       "target": [

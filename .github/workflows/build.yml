@@ -83,6 +83,13 @@ jobs:
         run: npm test
       - name: Build installers
         run: npm run dist -- --${{ matrix.platform }} --${{ matrix.arch }} --publish never
+      - name: Verify packaged Windows selection helper
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          $helper = './dist/win-unpacked/resources/app.asar.unpacked/native/drag-windows.ps1'
+          if (!(Test-Path $helper)) { throw 'Packaged Windows selection helper is missing' }
+          & $helper -SelfTest
       - name: Verify macOS bundle signatures and disk image
         if: runner.os == 'macOS'
         run: node scripts/verify-macos-build.cjs

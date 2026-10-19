@@ -36,7 +36,7 @@ Morphlet stays in your menu bar or system tray. Open a small conversion wheel, c
 3. For quick conversion, select a format in the wheel. For PDF editing, add a PDF in Studio and click **Edit PDF**.
 4. Preview your result. Conversions and edits save a new file; originals remain unchanged.
 
-On macOS, **Option+C** opens the wheel for selected Finder files. **Option-drag** on macOS and **Alt-drag** on supported Windows/Linux desktops open the wheel while dragging. A floating drop target is available when desktop integration is unavailable.
+On macOS, **Option+C** opens the wheel for selected Finder files. On Windows, select files in an active **File Explorer** window and tap **Alt** (press and release), or press **Alt+C**, to open the wheel with those files. Alt+Tab and other Alt shortcuts do not trigger the wheel. **Option-drag** on macOS and **Alt-drag** on supported Windows/Linux desktops open the wheel while dragging. A floating drop target is available when desktop integration is unavailable.
 
 ## Contents
 
