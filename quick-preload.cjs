@@ -1,0 +1,2 @@
+const {contextBridge,ipcRenderer}=require('electron');const invoke=(name,...args)=>ipcRenderer.invoke('quick:'+name,...args);
+contextBridge.exposeInMainWorld('quick',{info:()=>invoke('info'),preview:options=>invoke('preview',options),save:options=>invoke('save',options),studio:()=>invoke('studio'),close:()=>invoke('close'),reveal:file=>invoke('reveal',file),onAppearance:fn=>ipcRenderer.on('appearance',(_e,value)=>fn(value))});

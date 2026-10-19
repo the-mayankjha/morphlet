@@ -2,7 +2,7 @@
 const {BrowserWindow,ipcMain,dialog,shell}=require('electron');
 const fs=require('node:fs/promises'),path=require('node:path'),sharp=require('sharp');
 const {convert}=require('./convert.cjs');const {createSelectionState}=require('./selection-state.cjs');
-function createStudio({onWheel,keepWindow=()=>{},gestureSettings}){
+function createStudio({updater,onWheel,keepWindow=()=>{},gestureSettings}){
  require('electron').app.once('will-quit',()=>{pdfEditor?.close().catch(()=>{});});const appearance=require('./appearance.cjs');let glass;try{if(process.platform==='darwin')glass=require('./native/glass.node');}catch{}let material='fallback';
  let window,busy=false,outputDir,controller,pdfEditor,studioMenu,applyMaterial;let sidebarBox={width:190,top:78};const selection=createSelectionState(),entries=new Map(),outputs=new Set(),history=[];
  const snapshot=()=>({files:[...entries.values()],history,outputDir,busy,appearance:appearance.getAppearance(),gesture:gestureSettings?.get(),material});
@@ -30,6 +30,11 @@ function createStudio({onWheel,keepWindow=()=>{},gestureSettings}){
  if(files.length)await add(files);window.show();window.focus();if(!window.webContents.isLoading())window.webContents.send('studio:state',snapshot());return snapshot();}
  function handle(name,fn){ipcMain.handle('studio:'+name,(event,...args)=>{if(!window||window.isDestroyed()||event.sender!==window.webContents)throw Error('Invalid Studio session');return fn(...args);});}
  handle('sidebar-layout',value=>{if(!value||!Number.isInteger(value.width)||value.width<40||value.width>300||!Number.isInteger(value.top)||value.top<20||value.top>180)throw Error('Invalid sidebar layout');if(sidebarBox.width!==value.width||sidebarBox.top!==value.top){sidebarBox=value;applyMaterial?.();}});handle('menu-state',state=>{if(!state||typeof state!=='object'||Array.isArray(state)||Object.keys(state).length>30||!Object.values(state).every(v=>typeof v==='boolean'))throw Error('Invalid menu state');studioMenu?.update(state);});handle('nautilus-install',async()=>{const {app}=require('electron');if(process.platform!=='linux'||!app.isPackaged)throw Error('Install the Linux app before adding the Nautilus action.');return require('./nautilus.cjs').installNautilusAction({home:app.getPath('home'),executable:process.env.APPIMAGE||app.getPath('exe')});});handle('gesture',value=>{if(!gestureSettings)throw Error('Gesture settings unavailable');return gestureSettings.set(value);});handle('state',snapshot);handle('theme',theme=>appearance.setAppearance(theme));
+ let toolSession;const quickEngine=()=>require('./quick-tools.cjs');
+ handle('tool-info',async(file,action)=>{if(busy||!selection.allowed.has(file)||!quickEngine().toolsFor([file]).includes(action)||action==='studio')throw Error('Choose a supported image tool');toolSession={file,action};return {action,label:quickEngine().labels[action],files:[file],...await quickEngine().inspect([file]),appearance:appearance.getAppearance()};});
+ handle('tool-preview',options=>{if(!toolSession)throw Error('Choose a tool');return quickEngine().preview([toolSession.file],toolSession.action,options);});
+ handle('tool-save',async options=>{if(busy||!toolSession)throw Error('Wait for the current operation');busy=true;try{const result=await quickEngine().save([toolSession.file],toolSession.action,options);outputs.add(result.path);return result;}finally{busy=false;}});
+ handle('update-state',()=>updater?.get());handle('update-check',()=>updater.check());handle('update-download',()=>updater.download());handle('update-install',()=>updater.install());handle('update-auto',value=>updater.setAuto(value));handle('update-release',()=>updater.release());
  handle('pick',async()=>{if(busy)throw Error('Wait for conversion to finish');const result=await dialog.showOpenDialog(window,{properties:['openFile','multiSelections']});return result.canceled?snapshot():add(result.filePaths);});
  handle('drop',files=>{if(busy)throw Error('Wait for conversion to finish');if(!Array.isArray(files)||!files.every(f=>typeof f==='string'))throw Error('Invalid files');return add(files);});
  handle('remove',file=>{if(busy)throw Error('Wait for conversion to finish');if(file===null)entries.clear();else entries.delete(file);selection.commit([...entries.values()]);return snapshot();});
@@ -61,6 +66,8 @@ function createStudio({onWheel,keepWindow=()=>{},gestureSettings}){
  handle('reveal',file=>{if(outputs.has(file)||selection.allowed.has(file))shell.showItemInFolder(file);});
  handle('quicklook',file=>{if(outputs.has(file)||selection.allowed.has(file)){if(process.platform==='darwin')window.previewFile(file);else return shell.openPath(file);}});
  handle('wheel',async file=>{if(busy)throw Error('Wait for conversion to finish');if(!selection.allowed.has(file))throw Error('Select an input file');window.hide();await onWheel([file]);});
- return {open,isVisible:()=>!!window&&!window.isDestroyed()&&window.isVisible(),hasWindow:()=>!!window&&!window.isDestroyed()};
+ async function openFocused(files,edit=false){await open(files);if(window.webContents.isLoading())await new Promise(resolve=>window.webContents.once('did-finish-load',resolve));window.webContents.send('studio:state',snapshot());window.webContents.send('studio:focus-file',{path:files[0],edit});}
+ function showUpdates(){if(!window||window.isDestroyed())return;const send=()=>window.webContents.send('studio:menu-action','updates');if(window.webContents.isLoading())window.webContents.once('did-finish-load',send);else send();}
+ return {open,openFocused,showUpdates,isVisible:()=>!!window&&!window.isDestroyed()&&window.isVisible(),hasWindow:()=>!!window&&!window.isDestroyed()};
 }
 module.exports={createStudio};
