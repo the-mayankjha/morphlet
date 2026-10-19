@@ -83,6 +83,9 @@ jobs:
         run: npm test
       - name: Build installers
         run: npm run dist -- --${{ matrix.platform }} --${{ matrix.arch }} --publish never
+      - name: Verify macOS bundle signatures and disk image
+        if: runner.os == 'macOS'
+        run: node scripts/verify-macos-build.cjs
       - name: Collect installers and checksums
         run: node scripts/collect-artifacts.cjs
       - name: Upload installers

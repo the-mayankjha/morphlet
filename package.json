@@ -1,6 +1,6 @@
 {
   "name": "morphlet",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Local-first desktop file conversion with a radial drop menu",
   "license": "MIT",
   "author": "Mayank Kumar Jha",
@@ -54,7 +54,11 @@
         "NSAppleEventsUsageDescription": "Morphlet reads the files you select in Finder when you press Option+C.",
         "LSUIElement": true
       },
-      "icon": "assets/icon.icns"
+      "icon": "assets/icon.icns",
+      "identity": "-",
+      "hardenedRuntime": true,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist"
     },
     "win": {
       "target": [

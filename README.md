@@ -56,6 +56,12 @@ On macOS, open the DMG and drag Morphlet into Applications. On Windows, run the 
 
 **Current packages are unsigned and macOS builds are not notarized.** Your operating system may display a security prompt or block launch. Review the source and use the source instructions below if you prefer. A completed build does not certify that every desktop integration works on that platform.
 
+### macOS “damaged” or “corrupted” message
+
+The v1.2.1 macOS package was found to contain an incompletely signed application, even though the disk image checksum was valid. The build now explicitly ad-hoc signs the complete app and verifies its nested code and disk image before collecting release artifacts. A valid disk image checksum alone does not validate the app signature.
+
+Ad-hoc signing verifies bundle integrity; it does **not** establish an Apple Developer ID or provide notarization. For standard Gatekeeper distribution, the project still needs an Apple Developer ID Application certificate and Apple notarization. Do not disable Gatekeeper to work around a broken package. You can verify a downloaded DMG with `hdiutil verify` and the app with `codesign --verify --deep --strict --verbose=2`.
+
 ## Use Morphlet
 
 ### Select a file in Finder
