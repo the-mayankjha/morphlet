@@ -91,7 +91,9 @@ jobs:
           if (!(Test-Path $helper)) { throw 'Packaged Windows selection helper is missing' }
           & $helper -SelfTest
       - name: Verify macOS bundle signatures and disk image
-        if: runner.os == 'macOS'
+        # electron-builder deliberately skips signing on pull-request builds.
+        # Manual branch builds and release builds retain full signature validation.
+        if: runner.os == 'macOS' && github.event_name != 'pull_request'
         run: node scripts/verify-macos-build.cjs
       - name: Collect installers and checksums
         run: node scripts/collect-artifacts.cjs

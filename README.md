@@ -36,7 +36,9 @@ Morphlet stays in your menu bar or system tray. Open a small conversion wheel, c
 3. For quick conversion, select a format in the wheel. For PDF editing, add a PDF in Studio and click **Edit PDF**.
 4. Preview your result. Conversions and edits save a new file; originals remain unchanged.
 
-On macOS, **Option+C** opens the wheel for selected Finder files. On Windows, select files in an active **File Explorer** window and tap **Alt** (press and release), or press **Alt+C**, to open the wheel with those files. Alt+Tab and other Alt shortcuts do not trigger the wheel. **Option-drag** on macOS and **Alt-drag** on supported Windows/Linux desktops open the wheel while dragging. A floating drop target is available when desktop integration is unavailable.
+Select files in **Finder** and tap **Cmd** on macOS, or select files in an active **File Explorer** window and tap **Ctrl** on Windows. Press and release the modifier on its own; combinations such as Cmd+C / Ctrl+C, Alt+Tab and modifier-click selection do not invoke the wheel. Change the modifier or disable it in **Studio → Settings**. Option-drag / Alt-drag remain separate drag gestures.
+
+For **GNOME Files (Nautilus)**, open Studio Settings and choose **Install GNOME Files action** in the installed Linux app. Select files, right-click, then **Scripts → Morphlet** to open them directly in the wheel. This per-user action requires Python 3. GNOME Wayland does not provide a global modifier-only binding to normal applications; Ctrl-alone cannot be promised there. Use the Nautilus action or add files in Studio on unsupported desktops.
 
 ## Contents
 

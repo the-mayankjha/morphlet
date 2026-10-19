@@ -2,6 +2,7 @@
 #include <node_api.h>
 #import <Cocoa/Cocoa.h>
 #import <QuartzCore/QuartzCore.h>
+#import <ApplicationServices/ApplicationServices.h>
 #import <objc/message.h>
 // Region-scoped native materials behind Electron's web content. No screen capture.
 static const void *RegionsKey = &RegionsKey;
@@ -48,6 +49,10 @@ static napi_value dragState(napi_env env,napi_callback_info info){
  auto number=[&](const char *key,double value){napi_value v;napi_create_double(env,value,&v);napi_set_named_property(env,state,key,v);};
  bool down=([NSEvent pressedMouseButtons]&1)!=0,option=([NSEvent modifierFlags]&NSEventModifierFlagOption)!=0;
  NSPasteboard *board=[NSPasteboard pasteboardWithName:NSPasteboardNameDrag];NSPoint point=[NSEvent mouseLocation];
+ NSEventModifierFlags flags=[NSEvent modifierFlags];
+ boolean("command",(flags&NSEventModifierFlagCommand)!=0);boolean("control",(flags&NSEventModifierFlagControl)!=0);boolean("shift",(flags&NSEventModifierFlagShift)!=0);
+ bool other=false;if(flags&(NSEventModifierFlagCommand|NSEventModifierFlagControl|NSEventModifierFlagOption)){for(CGKeyCode key=0;key<128;key++){if(key>=54&&key<=63)continue;if(CGEventSourceKeyState(kCGEventSourceStateCombinedSessionState,key)){other=true;break;}}}
+ boolean("otherKey",other);napi_value owner;napi_create_string_utf8(env,NSWorkspace.sharedWorkspace.frontmostApplication.bundleIdentifier.UTF8String?:"",NAPI_AUTO_LENGTH,&owner);napi_set_named_property(env,state,"owner",owner);
  boolean("down",down);boolean("option",option);number("x",point.x);number("y",point.y);number("change",board.changeCount);
  napi_value paths;napi_create_array(env,&paths);
  if(down&&option){NSArray *urls=[board readObjectsForClasses:@[[NSURL class]] options:@{NSPasteboardURLReadingFileURLsOnlyKey:@YES}];uint32_t i=0;for(NSURL *url in urls){if(i>=100)break;if(url.isFileURL&&url.path){napi_value value;napi_create_string_utf8(env,url.path.UTF8String,NAPI_AUTO_LENGTH,&value);napi_set_element(env,paths,i++,value);}}}

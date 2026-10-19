@@ -7,7 +7,7 @@ test('Windows selected files come from Explorer and preserve Unicode, spaces and
 });
 test('Windows selection does not accept malformed output and gives platform-specific guidance',async()=>{
  for(const stdout of ['not json','{}','{"files":[1]}']){
-  const read=createSelectionReader({platform:'win32',run:async()=>({stdout})});await assert.rejects(read,/File Explorer.*Alt\+C/);
+  const read=createSelectionReader({platform:'win32',run:async()=>({stdout})});await assert.rejects(read,/File Explorer.*modifier key/);
  }
  const read=createSelectionReader({platform:'win32',run:async()=>({stdout:'{"files":[]}'})});assert.deepEqual(await read(),[]);
 });

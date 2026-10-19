@@ -1,4 +1,4 @@
-param([switch]$SelfTest,[switch]$SelectionOnly)
+param([switch]$SelfTest,[switch]$SelectionOnly,[ValidateSet("control","alt","disabled")][string]$Modifier="control")
 $ErrorActionPreference = 'Stop'
 [Console]::OutputEncoding = New-Object System.Text.UTF8Encoding($false)
 Add-Type @'
@@ -9,9 +9,10 @@ public static class MorphletPointer {
  [DllImport("user32.dll")] public static extern short GetAsyncKeyState(int key);
  [DllImport("user32.dll")] public static extern bool GetCursorPos(out Point point);
  [DllImport("user32.dll")] public static extern IntPtr GetForegroundWindow();
- public static bool OtherKeyDown() {
+ public static bool OtherKeyDown(int modifier) {
   for(int key=8;key<255;key++) {
-   if(key==0x12||key==0xA4||key==0xA5)continue;
+   if(modifier==0x12&&(key==0x12||key==0xA4||key==0xA5))continue;
+   if(modifier==0x11&&(key==0x11||key==0xA2||key==0xA3))continue;
    if((GetAsyncKeyState(key)&0x8000)!=0)return true;
   }
   return false;
@@ -57,13 +58,15 @@ if ($SelectionOnly) {
  $files=@(Get-ExplorerFiles ([MorphletPointer]::GetForegroundWindow().ToInt64()))
  [Console]::WriteLine((@{files=@($files)} | ConvertTo-Json -Compress -Depth 3)); exit 0
 }
+$modifierKey=if ($Modifier -eq "alt") { 0x12 } else { 0x11 }
 $wasDown=$false; $fired=$false; $origin=New-Object MorphletPointer+Point; $dragWindow=0
 while ($true) {
  $down=([MorphletPointer]::GetAsyncKeyState(1) -band 0x8000) -ne 0
  $alt=([MorphletPointer]::GetAsyncKeyState(0x12) -band 0x8000) -ne 0
  $foreground=[MorphletPointer]::GetForegroundWindow().ToInt64()
- $other=$false; if ($alt -or $script:wasAlt) { $other=[MorphletPointer]::OtherKeyDown() }
- $tap=Update-AltTap $alt ($down -or $other -or $fired) $foreground
+ $pressed=($Modifier -ne "disabled") -and (([MorphletPointer]::GetAsyncKeyState($modifierKey) -band 0x8000) -ne 0)
+ $other=$false; if ($pressed -or $script:wasAlt) { $other=[MorphletPointer]::OtherKeyDown($modifierKey) }
+ $tap=Update-AltTap $pressed ($down -or $other -or $fired) $foreground
  if ($tap) { $files=@(Get-ExplorerFiles $foreground); if ($files.Count) { [Console]::WriteLine((@{type='selection';files=@($files)} | ConvertTo-Json -Compress -Depth 3)) } }
  $point=New-Object MorphletPointer+Point; [void][MorphletPointer]::GetCursorPos([ref]$point)
  if ($down -and -not $wasDown) { $origin=$point; $fired=$false; $dragWindow=$foreground }
